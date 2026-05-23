@@ -34,15 +34,15 @@ namespace ShoppeFake.API.Controllers
         [SwaggerOperation(summary: "Register a new account")]
         public async Task<IActionResult> Register([FromBody] AccountRequest request)
         {
-            var result = await _authService.Register(request);
+            var result = await _authService.RegisterEmail(request);
             if (result.IsFailure)
             {
                 return BadRequest(ApiResponse<string>.BadRequestResponse(result.Error.Message));
             }
-            return Ok(ApiResponse<string>.OkResponse(request.UsernameOrEmail, "Registration successful please check email", "201"));
+            return Ok(ApiResponse<string>.OkResponse(request.Email, "Registration successful please check email", "201"));
         }
 
-        
+
 
         [HttpPatch("verifyOtp")]
         [SwaggerOperation(summary: "Verify the user's email using OTP")]
@@ -67,6 +67,6 @@ namespace ShoppeFake.API.Controllers
             }
             return Ok(ApiResponse<string>.OkResponse(null, "OTP resent successfully", "200"));
         }
-     
+
     }
 }

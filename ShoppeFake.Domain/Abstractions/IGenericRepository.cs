@@ -10,6 +10,7 @@ namespace ShoppeFake.Domain.Abstractions
         Task<IList<T>> GetAllAsync(Func<IQueryable<T>, IQueryable<T>>? include = null);
         Task<T?> GetByIdAsync(Object id);
         Task AddAsync(T entity);
+        Task AddRangeAsync(IEnumerable<T> entities);
         Task<T> UpdateAsync(T entity);
         Task DeleteAsync(Object id);
         Task<T?> FindAsync(Expression<Func<T, bool>> predicate, Func<IQueryable<T>, IQueryable<T>>? include = null);

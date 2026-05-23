@@ -29,11 +29,11 @@ namespace ShoppeFake.Application.Services
         }
         public async Task<Result<AuthResponse>> LoginEmail(AuthRequest request)
         {
-            if (string.IsNullOrEmpty(request.EmailOrUsername) || string.IsNullOrEmpty(request.Password))
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
             {
                 return Result<AuthResponse>.Fail("InvalidInput", "Email and password must be provided.");
             }
-            var requestEmail = request.EmailOrUsername.Trim();
+            var requestEmail = request.Email.Trim();
             var user = await _unitOfWork.GetRepository<Account>().FindAsync(x => x.Email == requestEmail && x.Status == Domain.Enums.StatusEnum.Active);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
@@ -42,22 +42,22 @@ namespace ShoppeFake.Application.Services
             }
             // Generate JWT token
             var token = await _jwtProvider.GenerateTokenAsync(user);
-            var refreshToken = _jwtProvider.RefreshToken();
+
             await _unitOfWork.SaveChangesAsync();
             var rs = new AuthResponse
             {
                 Token = token,
-                RefreshToken = refreshToken
+
             };
             return Result<AuthResponse>.Success(rs);
         }
-        public async Task<Result<string>> Register(AccountRequest request)
+        public async Task<Result<string>> RegisterEmail(AccountRequest request)
         {
-            if (request.UsernameOrEmail == null || request.Password == null || request.FullName == null)
+            if (request.Email == null || request.Password == null || request.FullName == null)
             {
                 return Result<string>.Fail("InvalidInput", "Email, password and full name must be provided.");
             }
-            var requestEmail = request.UsernameOrEmail.Trim();
+            var requestEmail = request.Email.Trim();
             var existingUser = await _unitOfWork.GetRepository<Account>().FindAsync(x => x.Email == requestEmail);
             if (existingUser != null && existingUser.Status == StatusEnum.Active)
             {
@@ -92,6 +92,7 @@ namespace ShoppeFake.Application.Services
                 Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 FullName = request.FullName,
                 Status = Domain.Enums.StatusEnum.Pending,
+                Role = Domain.Enums.RoleEnum.Customer,
                 CreatedAt = DateTime.UtcNow
             };
 
