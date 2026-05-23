@@ -20,19 +20,20 @@ namespace ShoppeFake.Application.Services
 
         public async Task<Result<AccountResponse>> CreateAccount(AccountRequest request)
         {
-            if (request.UsernameOrEmail == null || request.Password == null || request.FullName == null)
+            if (request.Email == null || request.Password == null || request.FullName == null)
             {
                 return Result<AccountResponse>.Fail("InvalidInput", "Email, Password and FullName are required.");
             }
-            if (Regex.IsMatch(request.UsernameOrEmail, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            if (Regex.IsMatch(request.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
             {
                 throw new ArgumentException("Invalid email format.");
             }
             var account = new Account
             {
-                Email = request.UsernameOrEmail,
+                Email = request.Email,
                 Password = request.Password,
                 FullName = request.FullName,
+                Role = Domain.Enums.RoleEnum.Customer,
                 Status = Domain.Enums.StatusEnum.Active
             };
             await _unitOfWork.GetRepository<Account>().AddAsync(account);

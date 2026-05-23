@@ -1,10 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using ShoppeFake.Infrastructure.DatabaseSettings;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShoppeFake.Infrastructure.SeedData
 {
@@ -24,10 +19,10 @@ namespace ShoppeFake.Infrastructure.SeedData
             {
                 var adminEmail = _configuration["Admin:Email"];
                 var adminPassword = _configuration["Admin:Password"];
-                             
+
                 var adminAccount = new Domain.Entities.Account
                 {
-                    
+
                     Email = adminEmail,
                     Password = BCrypt.Net.BCrypt.HashPassword(adminPassword),
                     FullName = "Administrator",

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Abstractions;
 using ShoppeFake.Infrastructure.Implemention;
+using ShoppeFake.Infrastructure.SeedData;
 
 namespace ShoppeFake.Infrastructure
 {
@@ -16,6 +17,7 @@ namespace ShoppeFake.Infrastructure
             services.AddScoped<IJwtProvider, JwtProvider>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IRedisService, OtpCacheService>();
+            services.AddScoped<InitData>();
         }
 
     }
