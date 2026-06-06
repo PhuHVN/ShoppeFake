@@ -4,6 +4,7 @@ using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.VariantDtos;
 using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Abstractions;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace ShoppeFake.API.Controllers
 {
@@ -17,6 +18,7 @@ namespace ShoppeFake.API.Controllers
             _variantProductService = variantProductService;
         }
         [HttpPost]
+        [SwaggerOperation(summary: "Create a new product variant", description: "Creates a new product variant and associates it with the provided attribute value IDs.")]
         public async Task<IActionResult> Add([FromQuery] IList<int> valueIds, [FromBody] VariantRequest request)
         {
             var result = await _variantProductService.CreateVariantAsync(valueIds, request);
@@ -29,6 +31,7 @@ namespace ShoppeFake.API.Controllers
 
 
         [HttpGet]
+        [SwaggerOperation(summary: "Get all product variants", description: "Retrieves a paginated list of all product variants.")]
         public async Task<IActionResult> GetAll(int pageIndex = 1, int pageSize = 10)
         {
             var result = await _variantProductService.GetAllVariantsAsync(pageIndex, pageSize);
@@ -39,6 +42,7 @@ namespace ShoppeFake.API.Controllers
             return BadRequest(ApiResponse<BasePaginatedList<VariantResponse>>.BadRequestResponse("Failed to get variants"));
         }
         [HttpGet("{id}")]
+        [SwaggerOperation(summary: "Get product variant by ID", description: "Retrieves the details of a product variant using its unique identifier.")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _variantProductService.GetVariantByIdAsync(id);
@@ -49,6 +53,7 @@ namespace ShoppeFake.API.Controllers
             return BadRequest(ApiResponse<VariantResponse>.BadRequestResponse("Failed to get variant"));
         }
         [HttpDelete("{id}")]
+        [SwaggerOperation(summary: "Delete a product variant", description: "Deletes a product variant using its unique identifier.")]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _variantProductService.DeleteVariantAsync(id);
@@ -59,6 +64,7 @@ namespace ShoppeFake.API.Controllers
             return BadRequest(ApiResponse<string>.BadRequestResponse("Failed to delete variant"));
         }
         [HttpPut("{id}")]
+        [SwaggerOperation(summary: "Update a product variant", description: "Updates the details of an existing product variant.")]
         public async Task<IActionResult> Update(int id, [FromBody] VariantRequest request)
         {
             var result = await _variantProductService.UpdateVariantAsync(id, request);

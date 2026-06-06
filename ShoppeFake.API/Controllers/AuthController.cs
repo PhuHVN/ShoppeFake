@@ -19,7 +19,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpPost("login")]
-        [SwaggerOperation(summary: "Login with email and password")]
+        [SwaggerOperation(summary: "Login with email and password", description: "Authenticates a user using email and password, then returns an access token when credentials are valid.")]
         public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
             var token = await _authService.LoginEmail(request);
@@ -31,7 +31,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpPost("register")]
-        [SwaggerOperation(summary: "Register a new account")]
+        [SwaggerOperation(summary: "Register a new account", description: "Registers a new user account with the provided details and sends an email confirmation when successful.")]
         public async Task<IActionResult> Register([FromBody] AccountRequest request)
         {
             var result = await _authService.RegisterEmail(request);

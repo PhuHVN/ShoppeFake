@@ -4,6 +4,7 @@ using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.ImgDtos;
 using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Abstractions;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace ShoppeFake.API.Controllers
 {
@@ -19,6 +20,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpPost("upload")]
+        [SwaggerOperation(summary: "Upload a product image", description: "Uploads a product image from form data and returns the stored image information.")]
         public async Task<IActionResult> UploadProductImage([FromForm] ImageDtos imageDtos)
         {
             var result = await _productImageService.UploadProductImageAsync(imageDtos);
@@ -29,6 +31,7 @@ namespace ShoppeFake.API.Controllers
             return Ok(ApiResponse<string>.OkResponse(result.Value, "Image uploaded successfully", "201"));
         }
         [HttpGet]
+        [SwaggerOperation(summary: "Get all product images", description: "Retrieves a paginated list of all product images.")]
         public async Task<IActionResult> ListProductImages([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
         {
             var result = await _productImageService.ListProductImagesAsync(pageIndex, pageSize);
