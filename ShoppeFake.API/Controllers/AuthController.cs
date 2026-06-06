@@ -44,29 +44,29 @@ namespace ShoppeFake.API.Controllers
 
 
 
-        [HttpPatch("verifyOtp")]
-        [SwaggerOperation(summary: "Verify the user's email using OTP")]
-        public async Task<IActionResult> VerifyEmail(VerifyOtpDtos verifyOtp)
-        {
-            await _authService.VerifyEmail(verifyOtp.Email, verifyOtp.Otp);
-            if (verifyOtp == null)
-            {
-                return BadRequest(ApiResponse<string>.BadRequestResponse("Invalid OTP or email"));
-            }
-            return Ok(ApiResponse<string>.OkResponse(null, "Email verified successfully", "200"));
-        }
+        //[HttpPatch("verifyOtp")]
+        //[SwaggerOperation(summary: "Verify the user's email using OTP")]
+        //public async Task<IActionResult> VerifyEmail(VerifyOtpDtos verifyOtp)
+        //{
+        //    await _authService.VerifyEmail(verifyOtp.Email, verifyOtp.Otp);
+        //    if (verifyOtp == null)
+        //    {
+        //        return BadRequest(ApiResponse<string>.BadRequestResponse("Invalid OTP or email"));
+        //    }
+        //    return Ok(ApiResponse<string>.OkResponse(null, "Email verified successfully", "200"));
+        //}
 
-        [HttpPost("resendOtp/{email}")]
-        [SwaggerOperation(summary: "Resend OTP to the user's email")]
-        public async Task<IActionResult> ResendOtp([FromRoute] string email)
-        {
-            await _authService.ResendOtpAsync(email);
-            if (email == null)
-            {
-                return BadRequest(ApiResponse<string>.BadRequestResponse("Invalid email"));
-            }
-            return Ok(ApiResponse<string>.OkResponse(null, "OTP resent successfully", "200"));
-        }
+        //[HttpPost("resendOtp/{email}")]
+        //[SwaggerOperation(summary: "Resend OTP to the user's email")]
+        //public async Task<IActionResult> ResendOtp([FromRoute] string email)
+        //{
+        //    await _authService.ResendOtpAsync(email);
+        //    if (email == null)
+        //    {
+        //        return BadRequest(ApiResponse<string>.BadRequestResponse("Invalid email"));
+        //    }
+        //    return Ok(ApiResponse<string>.OkResponse(null, "OTP resent successfully", "200"));
+        //}
 
     }
 }
