@@ -1,0 +1,46 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Build artifacts
+bin/
+obj/
+out/
+dist/
+
+# IDEs
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.iml
+.idea/
+
+# Dependencies
+node_modules/
+packages/
+.nuget/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Test results
+TestResults/
+coverage/
+
+# Misc
+.env
+*.swp
+*.swo
+*~
