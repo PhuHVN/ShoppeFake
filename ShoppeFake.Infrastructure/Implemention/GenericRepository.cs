@@ -91,11 +91,24 @@ namespace ShoppeFake.Infrastructure.Implemention
             return exist;
         }
 
-        public async Task<BasePaginatedList<T>> GetPagging(IQueryable<T> query, int index, int pageSize)
+        public async Task<BasePaginatedList<T>> GetPagging(
+    IQueryable<T> query,
+    int index,
+    int pageSize)
         {
-            query = query.OrderBy(x => EF.Property<object>(x, "Id"));
+            if (index < 1)
+                index = 1;
+
+            if (pageSize < 1)
+                pageSize = 10;
+
             var count = await query.CountAsync();
-            var items = await query.Skip((index - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            var items = await query
+                .Skip((index - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
             return new BasePaginatedList<T>(items, count, index, pageSize);
         }
         public IQueryable<T> GetQueryable()

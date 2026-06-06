@@ -1,11 +1,14 @@
 using AutoMapper;
+using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using ShoppeFake.API;
 using ShoppeFake.Application.DTOs;
+using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Enums.EnumConfig;
 using ShoppeFake.Infrastructure.DatabaseSettings;
+using ShoppeFake.Infrastructure.Implemention;
 using ShoppeFake.Infrastructure.SeedData;
 using StackExchange.Redis;
 using System.Security.Claims;
@@ -160,6 +163,15 @@ builder.Services.AddAuthentication(options =>
 // Add services to the container.
 builder.Services.AddControllers();
 DotNetEnv.Env.Load();
+//Cloudinary
+var cloudName = builder.Configuration["Cloudinary:CloudName"];
+var apiKey = builder.Configuration["Cloudinary:ApiKey"];
+var apiSecret = builder.Configuration["Cloudinary:ApiSecret"];
+
+var account = new Account(cloudName, apiKey, apiSecret);
+var cloudinary = new Cloudinary(account);
+builder.Services.AddSingleton<ICloudinary>(sp => cloudinary);
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 //Add Dependency Injection
 builder.Services.AddConfig(builder.Configuration);
 builder.Services.AddHttpContextAccessor();

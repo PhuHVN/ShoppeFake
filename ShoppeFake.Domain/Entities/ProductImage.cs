@@ -10,7 +10,7 @@ namespace ShoppeFake.Domain.Entities
     public class ProductImage
     {
         public int Id { get; set; }
-        public string ImgageUrl { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
         public StatusEnum Status { get; set; } = StatusEnum.Active;
         //navigation
         public int ProductId { get; set; }

@@ -19,7 +19,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpPost("login")]
-        [SwaggerOperation(summary: "Login with email and password")]
+        [SwaggerOperation(summary: "Login with email and password", description: "Authenticates a user using email and password, then returns an access token when credentials are valid.")]
         public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
             var token = await _authService.LoginEmail(request);
@@ -31,7 +31,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpPost("register")]
-        [SwaggerOperation(summary: "Register a new account")]
+        [SwaggerOperation(summary: "Register a new account", description: "Registers a new user account with the provided details and sends an email confirmation when successful.")]
         public async Task<IActionResult> Register([FromBody] AccountRequest request)
         {
             var result = await _authService.RegisterEmail(request);
@@ -44,29 +44,29 @@ namespace ShoppeFake.API.Controllers
 
 
 
-        [HttpPatch("verifyOtp")]
-        [SwaggerOperation(summary: "Verify the user's email using OTP")]
-        public async Task<IActionResult> VerifyEmail(VerifyOtpDtos verifyOtp)
-        {
-            await _authService.VerifyEmail(verifyOtp.Email, verifyOtp.Otp);
-            if (verifyOtp == null)
-            {
-                return BadRequest(ApiResponse<string>.BadRequestResponse("Invalid OTP or email"));
-            }
-            return Ok(ApiResponse<string>.OkResponse(null, "Email verified successfully", "200"));
-        }
+        //[HttpPatch("verifyOtp")]
+        //[SwaggerOperation(summary: "Verify the user's email using OTP")]
+        //public async Task<IActionResult> VerifyEmail(VerifyOtpDtos verifyOtp)
+        //{
+        //    await _authService.VerifyEmail(verifyOtp.Email, verifyOtp.Otp);
+        //    if (verifyOtp == null)
+        //    {
+        //        return BadRequest(ApiResponse<string>.BadRequestResponse("Invalid OTP or email"));
+        //    }
+        //    return Ok(ApiResponse<string>.OkResponse(null, "Email verified successfully", "200"));
+        //}
 
-        [HttpPost("resendOtp/{email}")]
-        [SwaggerOperation(summary: "Resend OTP to the user's email")]
-        public async Task<IActionResult> ResendOtp([FromRoute] string email)
-        {
-            await _authService.ResendOtpAsync(email);
-            if (email == null)
-            {
-                return BadRequest(ApiResponse<string>.BadRequestResponse("Invalid email"));
-            }
-            return Ok(ApiResponse<string>.OkResponse(null, "OTP resent successfully", "200"));
-        }
+        //[HttpPost("resendOtp/{email}")]
+        //[SwaggerOperation(summary: "Resend OTP to the user's email")]
+        //public async Task<IActionResult> ResendOtp([FromRoute] string email)
+        //{
+        //    await _authService.ResendOtpAsync(email);
+        //    if (email == null)
+        //    {
+        //        return BadRequest(ApiResponse<string>.BadRequestResponse("Invalid email"));
+        //    }
+        //    return Ok(ApiResponse<string>.OkResponse(null, "OTP resent successfully", "200"));
+        //}
 
     }
 }

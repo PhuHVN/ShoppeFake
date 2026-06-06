@@ -111,14 +111,22 @@ namespace ShoppeFake.Application.Services
         public async Task<Result<BasePaginatedList<VariantResponse>>> GetAllVariantsAsync(int pageIndex, int pageSize)
         {
             var query = _unitOfWork.GetRepository<ProductVariant>().Entity
+                .AsNoTracking()
                 .Where(x => x.Status == Domain.Enums.StatusEnum.Active)
+                .OrderByDescending(x => x.CreatedAt)
                 .Include(x => x.Product)
-                .Include(v => v.VariantAttributeValues)
-                .ThenInclude(x => x.Attribute)
-                .Include(v => v.VariantAttributeValues)
-                .ThenInclude(x => x.AttributeValue);
-            var rs = await _unitOfWork.GetRepository<ProductVariant>().GetPagging(query, pageIndex, pageSize);
-            return Result<BasePaginatedList<VariantResponse>>.Success(_mapper.Map<BasePaginatedList<VariantResponse>>(rs));
+                .Include(x => x.ProductImages)
+                .Include(x => x.VariantAttributeValues)
+                    .ThenInclude(x => x.Attribute)
+                .Include(x => x.VariantAttributeValues)
+                    .ThenInclude(x => x.AttributeValue);
+
+            var result = await _unitOfWork
+                .GetRepository<ProductVariant>()
+                .GetPagging(query, pageIndex, pageSize);
+
+            var response = _mapper.Map<BasePaginatedList<VariantResponse>>(result);
+            return Result<BasePaginatedList<VariantResponse>>.Success(response);
         }
 
         public async Task<Result<VariantResponse>> GetVariantByIdAsync(int id)
@@ -131,8 +139,10 @@ namespace ShoppeFake.Application.Services
 
             // Eager load related data
             var query = _unitOfWork.GetRepository<ProductVariant>().Entity
+                .AsNoTracking()
                 .Where(x => x.Id == id && x.Status == Domain.Enums.StatusEnum.Active)
                 .Include(x => x.Product)
+                .Include(x => x.ProductImages)
                 .Include(v => v.VariantAttributeValues)
                 .ThenInclude(x => x.Attribute)
                 .Include(v => v.VariantAttributeValues)

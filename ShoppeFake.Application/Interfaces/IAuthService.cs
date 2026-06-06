@@ -8,7 +8,7 @@ namespace ShoppeFake.Application.Interfaces
     {
         Task<Result<AuthResponse>> LoginEmail(AuthRequest request);
         Task<Result<string>> RegisterEmail(AccountRequest request);
-        Task<Result> VerifyEmail(string email, string otp);
-        Task<Result> ResendOtpAsync(string email);
+        //Task<Result> VerifyEmail(string email, string otp);
+        //Task<Result> ResendOtpAsync(string email);
     }
 }

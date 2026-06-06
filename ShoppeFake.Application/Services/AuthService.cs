@@ -15,16 +15,13 @@ namespace ShoppeFake.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IJwtProvider _jwtProvider;
 
-        private readonly IEmailService _emailService;
-        private readonly IRedisService _redisService;
+
         private readonly IMapper _mapper;
-        public AuthService(IUnitOfWork unitOfWork, IJwtProvider jwtProvider, IEmailService emailService, IRedisService redisService, IMapper mapper)
+        public AuthService(IUnitOfWork unitOfWork, IJwtProvider jwtProvider, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _jwtProvider = jwtProvider;
 
-            _emailService = emailService;
-            _redisService = redisService;
             _mapper = mapper;
         }
         public async Task<Result<AuthResponse>> LoginEmail(AuthRequest request)
@@ -63,15 +60,15 @@ namespace ShoppeFake.Application.Services
             {
                 return Result<string>.Fail("EmailAlreadyInUse", "An account with this email already exists.");
             }
-            if (existingUser != null && existingUser.Status == StatusEnum.Pending)
-            {
-                //remove old otp and resend new otp to email
-                await _redisService.RemoveOtpAsync(requestEmail);
-                var newOtp = _redisService.GenerateOTP();
-                await _redisService.StoreOtpAsync(requestEmail, newOtp, TimeSpan.FromMinutes(5));
-                await _emailService.SendOtpAsync(requestEmail, newOtp);
-                return Result<string>.Success(requestEmail);
-            }
+            //if (existingUser != null && existingUser.Status == StatusEnum.Pending)
+            //{
+            //    //remove old otp and resend new otp to email
+            //    await _redisService.RemoveOtpAsync(requestEmail);
+            //    var newOtp = _redisService.GenerateOTP();
+            //    await _redisService.StoreOtpAsync(requestEmail, newOtp, TimeSpan.FromMinutes(5));
+            //    await _emailService.SendOtpAsync(requestEmail, newOtp);
+            //    return Result<string>.Success(requestEmail);
+            //}
             if (existingUser != null && existingUser.Status == StatusEnum.Inactive)
             {
                 return Result<string>.Fail("InactiveAccount", "An account with this email is inactive. Please contact support for assistance.");
@@ -96,7 +93,7 @@ namespace ShoppeFake.Application.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            var otp = _redisService.GenerateOTP();
+            //var otp = _redisService.GenerateOTP();
             await _unitOfWork.BeginTransactionAsync();
             try
             {
@@ -105,9 +102,9 @@ namespace ShoppeFake.Application.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 await _unitOfWork.CommitTransactionAsync();
-                await _redisService.StoreOtpAsync(requestEmail, otp, TimeSpan.FromMinutes(5));
-                await _emailService.SendOtpAsync(requestEmail, otp);
-                return Result<string>.Success(requestEmail);
+                //await _redisService.StoreOtpAsync(requestEmail, otp, TimeSpan.FromMinutes(5));
+                //await _emailService.SendOtpAsync(requestEmail, otp);
+                return Result<string>.Success("Registration successful.");
             }
             catch (Exception ex)
             {
@@ -116,46 +113,46 @@ namespace ShoppeFake.Application.Services
             }
 
         }
-        public async Task<Result> ResendOtpAsync(string email)
-        {
-            if (string.IsNullOrEmpty(email))
-            {
-                return Result.Fail(Error.Invalid);
-            }
-            var user = await _unitOfWork.GetRepository<Account>().FindAsync(x => x.Email == email && x.Status == Domain.Enums.StatusEnum.Pending);
-            if (user == null)
-            {
-                return Result.Fail(Error.NotFound);
-            }
-            await _redisService.RemoveOtpAsync(email);
-            var otp = _redisService.GenerateOTP();
-            await _emailService.SendOtpAsync(email, otp);
-            await _redisService.StoreOtpAsync(email, otp, TimeSpan.FromMinutes(5));
-            return Result.Success();
-        }
-        public async Task<Result> VerifyEmail(string email, string otp)
-        {
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(otp))
-            {
-                return Result.Fail(Error.Invalid);
-            }
-            var storedOtp = await _redisService.RetrieveOtpAsync(email);
-            if (storedOtp == null || storedOtp != otp)
-            {
-                return Result.Fail(Error.Unauthorized);
-            }
-            var user = await _unitOfWork.GetRepository<Account>().FindAsync(x => x.Email == email && x.Status == Domain.Enums.StatusEnum.Pending);
-            if (user == null)
-            {
-                return Result.Fail(Error.NotFound);
-            }
-            user.Status = Domain.Enums.StatusEnum.Active;
+        //public async Task<Result> ResendOtpAsync(string email)
+        //{
+        //    if (string.IsNullOrEmpty(email))
+        //    {
+        //        return Result.Fail(Error.Invalid);
+        //    }
+        //    var user = await _unitOfWork.GetRepository<Account>().FindAsync(x => x.Email == email && x.Status == Domain.Enums.StatusEnum.Pending);
+        //    if (user == null)
+        //    {
+        //        return Result.Fail(Error.NotFound);
+        //    }
+        //    await _redisService.RemoveOtpAsync(email);
+        //    var otp = _redisService.GenerateOTP();
+        //    await _emailService.SendOtpAsync(email, otp);
+        //    await _redisService.StoreOtpAsync(email, otp, TimeSpan.FromMinutes(5));
+        //    return Result.Success();
+        //}
+        //public async Task<Result> VerifyEmail(string email, string otp)
+        //{
+        //    if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(otp))
+        //    {
+        //        return Result.Fail(Error.Invalid);
+        //    }
+        //    var storedOtp = await _redisService.RetrieveOtpAsync(email);
+        //    if (storedOtp == null || storedOtp != otp)
+        //    {
+        //        return Result.Fail(Error.Unauthorized);
+        //    }
+        //    var user = await _unitOfWork.GetRepository<Account>().FindAsync(x => x.Email == email && x.Status == Domain.Enums.StatusEnum.Pending);
+        //    if (user == null)
+        //    {
+        //        return Result.Fail(Error.NotFound);
+        //    }
+        //    user.Status = Domain.Enums.StatusEnum.Active;
 
-            await _unitOfWork.GetRepository<Account>().UpdateAsync(user);
-            await _unitOfWork.SaveChangesAsync();
-            await _redisService.RemoveOtpAsync(email);
-            return Result.Success();
-        }
+        //    await _unitOfWork.GetRepository<Account>().UpdateAsync(user);
+        //    await _unitOfWork.SaveChangesAsync();
+        //    await _redisService.RemoveOtpAsync(email);
+        //    return Result.Success();
+        //}
 
 
     }

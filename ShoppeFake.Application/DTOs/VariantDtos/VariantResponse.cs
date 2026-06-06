@@ -19,6 +19,7 @@ namespace ShoppeFake.Application.DTOs.VariantDtos
         public int StockQuantity { get; set; }
         public string Sku { get; set; } = string.Empty;
         public int WeightGrams { get; set; }
+        public IList<string> ImageUrl { get; set; } = new List<string>();
         public StatusEnum Status { get; set; } = StatusEnum.Active;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
