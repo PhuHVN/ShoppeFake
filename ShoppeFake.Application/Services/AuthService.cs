@@ -88,13 +88,13 @@ namespace ShoppeFake.Application.Services
                 Email = requestEmail,
                 Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 FullName = request.FullName,
-                Status = Domain.Enums.StatusEnum.Pending,
+                Status = Domain.Enums.StatusEnum.Active,
                 Role = Domain.Enums.RoleEnum.Customer,
                 CreatedAt = DateTime.UtcNow
             };
 
             //var otp = _redisService.GenerateOTP();
-            await _unitOfWork.BeginTransactionAsync();
+
             try
             {
 
@@ -108,7 +108,7 @@ namespace ShoppeFake.Application.Services
             }
             catch (Exception ex)
             {
-                await _unitOfWork.RollBackAsync();
+
                 return Result<string>.Fail("RegistrationError", "An error occurred while registering the account.");
             }
 
