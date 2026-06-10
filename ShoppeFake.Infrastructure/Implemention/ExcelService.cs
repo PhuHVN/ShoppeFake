@@ -1,28 +1,130 @@
 ﻿using ClosedXML.Excel;
+using ShoppeFake.Application.DTOs.ExcelDtos;
 using ShoppeFake.Application.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 namespace ShoppeFake.Infrastructure.Implemention
 {
     public class ExcelService : IExcelService
     {
-        private readonly IProductService _productService;
         private readonly IVariantService _variantService;
-        
-        public ExcelService(IProductService productService, IVariantService variantService)
+
+        public ExcelService(IVariantService variantService)
         {
-            _productService = productService;
+
             _variantService = variantService;
         }
         public async Task<byte[]> ExportProductsToExcel()
         {
             var result = await _variantService.GetAllToExportAsync();
-            if(result.Count <= 0)
+            if (result.Count <= 0)
             {
-                throw new Exception("Error: No data available for export.");
+                throw new KeyNotFoundException("Error: No data available for export.");
             }
 
-            return ExportToExcel(result, "Products");
+            var shopifyRows = result.Select(MapToShopifyProductExport).ToList();
+            return ExportToExcel(shopifyRows, "Shopify Products");
+        }
+
+        private static ShopifyProductExportDto MapToShopifyProductExport(ProductVariantExportDto source)
+        {
+            var options = ParseOptions(source.Attributes);
+
+            return new ShopifyProductExportDto
+            {
+                Handle = BuildHandle(source.ProductName, source.ProductId),
+                Title = source.ProductName,
+                BodyHtml = source.ProductDescription ?? string.Empty,
+                Vendor = source.BrandName ?? string.Empty,
+                ProductCategory = source.CategoryName ?? string.Empty,
+                Type = source.CategoryName ?? string.Empty,
+                Tags = BuildTags(options),
+                Option1Name = GetOptionName(options, 0),
+                Option1Value = GetOptionValue(options, 0),
+                Option2Name = GetOptionName(options, 1),
+                Option2Value = GetOptionValue(options, 1),
+                Option3Name = GetOptionName(options, 2),
+                Option3Value = GetOptionValue(options, 2),
+                VariantSku = source.Sku,
+                VariantGrams = source.WeightGrams,
+                VariantInventoryQty = source.StockQuantity,
+                VariantPrice = source.Price,
+                VariantImage = GetFirstImageUrl(source.ImageUrls),
+                Status = source.Status.Equals("Active", StringComparison.OrdinalIgnoreCase)
+                    ? "active"
+                    : "draft"
+            };
+        }
+
+        private static List<(string Name, string Value)> ParseOptions(string? attributes)
+        {
+            if (string.IsNullOrWhiteSpace(attributes))
+                return new List<(string Name, string Value)>();
+
+            return attributes
+                .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(attribute =>
+                {
+                    var separatorIndex = attribute.IndexOf(':');
+                    if (separatorIndex < 0)
+                        return (Name: attribute.Trim(), Value: string.Empty);
+
+                    return (
+                        Name: attribute[..separatorIndex].Trim(),
+                        Value: attribute[(separatorIndex + 1)..].Trim()
+                    );
+                })
+                .Where(option => !string.IsNullOrWhiteSpace(option.Name))
+                .ToList();
+        }
+
+        private static string BuildTags(IEnumerable<(string Name, string Value)> options)
+        {
+            var tags = options
+                .Where(option => !string.IsNullOrWhiteSpace(option.Value))
+                .Select(option => $"{option.Name}: {option.Value}");
+
+            return string.Join(", ", tags.Distinct(StringComparer.OrdinalIgnoreCase));
+        }
+
+        private static string GetOptionName(IReadOnlyList<(string Name, string Value)> options, int index)
+        {
+            return index < options.Count ? options[index].Name : string.Empty;
+        }
+
+        private static string GetOptionValue(IReadOnlyList<(string Name, string Value)> options, int index)
+        {
+            return index < options.Count ? options[index].Value : string.Empty;
+        }
+
+        private static string GetFirstImageUrl(string? imageUrls)
+        {
+            if (string.IsNullOrWhiteSpace(imageUrls))
+                return string.Empty;
+
+            return imageUrls
+                .Split(new[] { '|', ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .FirstOrDefault() ?? string.Empty;
+        }
+
+        private static string BuildHandle(string productName, int productId)
+        {
+            var normalized = productName.Normalize(NormalizationForm.FormD);
+            var builder = new StringBuilder();
+
+            foreach (var character in normalized)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
+                    builder.Append(char.ToLowerInvariant(character));
+            }
+
+            var slug = Regex.Replace(builder.ToString(), @"[^a-z0-9]+", "-").Trim('-');
+            return string.IsNullOrWhiteSpace(slug)
+                ? $"product-{productId}"
+                : $"{slug}-{productId}";
         }
 
         public static byte[] ExportToExcel<T>(IEnumerable<T> data, string sheetName)
@@ -106,7 +208,7 @@ namespace ShoppeFake.Infrastructure.Implemention
                 }
             }
 
-            ws.Columns().AdjustToContents();
+            ws.Columns().AdjustToContents(1, Math.Min(items.Count + 1, 200));
 
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);

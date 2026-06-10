@@ -98,6 +98,6 @@ namespace ShoppeFake.Application.Services
             }
 
         }
-        
+
     }
 }

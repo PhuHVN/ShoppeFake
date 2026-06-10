@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.AttributeDtos;
 using ShoppeFake.Application.Interfaces;
@@ -51,6 +50,6 @@ namespace ShoppeFake.API.Controllers
             }
             return Ok(ApiResponse<AttributeResponse>.OkResponse(result.Value, "Attribute created successfully", "201"));
         }
-        
+
     }
 }

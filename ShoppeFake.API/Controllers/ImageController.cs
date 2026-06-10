@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.ImgDtos;
 using ShoppeFake.Application.Interfaces;

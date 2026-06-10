@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace ShoppeFake.Application.DTOs.ExcelDtos
 {
@@ -38,12 +33,12 @@ namespace ShoppeFake.Application.DTOs.ExcelDtos
 
         [Display(Name = "Status")]
         public string Status { get; set; } = default!;
-        
+
         [Display(Name = "Image URLs")]
         public string ImageUrls { get; set; } = default!;
-        
+
         [Display(Name = "Attributes")]
-        public string Attributes { get; set; } = default!;       
+        public string Attributes { get; set; } = default!;
 
         [Display(Name = "Created At")]
         public DateTime CreatedAt { get; set; }

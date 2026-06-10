@@ -4,11 +4,6 @@ using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Abstractions;
 using ShoppeFake.Domain.Common.Results;
 using ShoppeFake.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShoppeFake.Application.Services
 {
@@ -33,19 +28,23 @@ namespace ShoppeFake.Application.Services
 
         public async Task<Result<string>> UploadProductImageAsync(ImageDtos imageDtos)
         {
-            if(imageDtos == null || imageDtos.Image == null)
+            if (imageDtos == null || imageDtos.Image == null)
             {
                 return Result<string>.Fail("400", "Image file is required.");
             }
             var product = await _unitOfWork.GetRepository<Product>().GetByIdAsync(imageDtos.ProductId);
-            if(product == null)
+            if (product == null)
             {
                 return Result<string>.Fail("404", $"Product not found.");
             }
             var variant = await _unitOfWork.GetRepository<ProductVariant>().GetByIdAsync(imageDtos.VariantId);
-            if(variant == null)
+            if (variant == null)
             {
                 return Result<string>.Fail("404", $"Variant not found.");
+            }
+            if (variant.ProductId != product.Id)
+            {
+                return Result<string>.Fail("400", $"Variant does not belong to the specified product.");
             }
             try
             {

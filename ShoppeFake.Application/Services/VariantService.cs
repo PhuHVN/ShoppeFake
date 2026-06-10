@@ -7,11 +7,6 @@ using ShoppeFake.Domain.Abstractions;
 using ShoppeFake.Domain.Common.Results;
 using ShoppeFake.Domain.Entities;
 using ShoppeFake.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShoppeFake.Application.Services
 {
@@ -170,7 +165,7 @@ namespace ShoppeFake.Application.Services
                 .Select(x => new
                 {
                     x.ProductVariantId,
-                    AttributeName = x.Attribute.Name,
+                    AttributeCode = x.Attribute.Code,
                     ValueText = x.AttributeValue.ValueText
                 })
                 .ToListAsync();
@@ -181,7 +176,7 @@ namespace ShoppeFake.Application.Services
 
             var attrsByVariant = attributes
                 .GroupBy(x => x.ProductVariantId)
-                .ToDictionary(g => g.Key, g => string.Join("; ", g.Select(x => $"{x.AttributeName}: {x.ValueText}")));
+                .ToDictionary(g => g.Key, g => string.Join("; ", g.Select(x => $"{x.AttributeCode}: {x.ValueText}")));
 
             foreach (var item in variants)
             {
@@ -230,7 +225,7 @@ namespace ShoppeFake.Application.Services
 
         public Task<Result<VariantResponse>> UpdateVariantAsync(int id, VariantRequest request)
         {
-            throw new NotImplementedException();
+            throw new Exception("Not implemented yet");
         }
     }
 }

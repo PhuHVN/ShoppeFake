@@ -1,6 +1,4 @@
-﻿using Google.Apis.Logging;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.ValueDtos;
 using ShoppeFake.Application.Interfaces;
