@@ -17,6 +17,7 @@ namespace ShoppeFake.Infrastructure.DatabaseSettings
         public DbSet<Domain.Entities.Attribute> Attributes { get; set; }
         public DbSet<AttributeValue> AttributeValues { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
+        public DbSet<Feedback> Feedbacks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ShoppeFake.Application.Interfaces;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace ShoppeFake.API.Controllers
 {
@@ -15,6 +16,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpGet("export")]
+        [SwaggerOperation(Summary = "Export products to Excel", Description = "Exports the list of products to an Excel file.")]
         public async Task<IActionResult> ExportToExcel()
         {
             var fileContent = await _excelService.ExportProductsToExcel();

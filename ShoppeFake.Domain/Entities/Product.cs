@@ -20,5 +20,6 @@ namespace ShoppeFake.Domain.Entities
         public Category Category { get; set; } = null!;
         public ICollection<ProductVariant> ProductVariants { get; set; } = null!;
         public ICollection<ProductImage> ProductImages { get; set; } = null!;
+        public ICollection<Feedback> Feedbacks { get; set; } = null!;
     }
 }

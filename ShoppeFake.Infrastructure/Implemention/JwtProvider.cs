@@ -40,6 +40,7 @@ namespace ShoppeFake.Infrastructure.Implemention
                         new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
                         new Claim(ClaimTypes.Email, account.Email),
                         new Claim(ClaimTypes.Name, account.FullName),
+                        new Claim(ClaimTypes.Role, account.Role.ToString()),
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                         new Claim(JwtRegisteredClaimNames.Sub, acc.Id.ToString())
                     }),

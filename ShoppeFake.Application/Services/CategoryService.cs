@@ -23,7 +23,7 @@ namespace ShoppeFake.Application.Services
             {
                 return Result<CategoryResponse>.Fail("InvalidData", "Category name is required.");
             }
-            var existingCategory = await _unitOfWork.GetRepository<Category>().FindAsync(c => c.Name.ToLower() == request.Name.ToLower() || c.Status == StatusEnum.Inactive);
+            var existingCategory = await _unitOfWork.GetRepository<Category>().FindAsync(c => c.Name.ToLower() == request.Name.ToLower() && c.Status == StatusEnum.Active);
             if (existingCategory != null)
             {
                 return Result<CategoryResponse>.Fail("DuplicateData", "A category with the same name already exists.");

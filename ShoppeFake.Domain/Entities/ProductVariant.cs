@@ -23,5 +23,7 @@ namespace ShoppeFake.Domain.Entities
         public ICollection<VariantAttributeValue> VariantAttributeValues { get; set; } = null!;
         //1 - M with ProductImage
         public ICollection<ProductImage> ProductImages { get; set; } = null!;
+        //1 - M with CartItem
+        public ICollection<CartItem> CartItems { get; set; } = null!;
     }
 }

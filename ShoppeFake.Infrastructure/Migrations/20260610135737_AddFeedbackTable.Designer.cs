@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ShoppeFake.Infrastructure.DatabaseSettings;
@@ -11,9 +12,11 @@ using ShoppeFake.Infrastructure.DatabaseSettings;
 namespace ShoppeFake.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260610135737_AddFeedbackTable")]
+    partial class AddFeedbackTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -113,64 +116,6 @@ namespace ShoppeFake.Infrastructure.Migrations
                     b.ToTable("AttributeValues");
                 });
 
-            modelBuilder.Entity("ShoppeFake.Domain.Entities.Cart", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AccountId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AccountId")
-                        .IsUnique();
-
-                    b.ToTable("Cart");
-                });
-
-            modelBuilder.Entity("ShoppeFake.Domain.Entities.CartItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CartId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("ProductVariantId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CartId");
-
-                    b.HasIndex("ProductVariantId");
-
-                    b.ToTable("CartItem");
-                });
-
             modelBuilder.Entity("ShoppeFake.Domain.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -226,9 +171,6 @@ namespace ShoppeFake.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("Rating")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -403,32 +345,6 @@ namespace ShoppeFake.Infrastructure.Migrations
                     b.Navigation("Attribute");
                 });
 
-            modelBuilder.Entity("ShoppeFake.Domain.Entities.Cart", b =>
-                {
-                    b.HasOne("ShoppeFake.Domain.Entities.Account", "Account")
-                        .WithOne("Cart")
-                        .HasForeignKey("ShoppeFake.Domain.Entities.Cart", "AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Account");
-                });
-
-            modelBuilder.Entity("ShoppeFake.Domain.Entities.CartItem", b =>
-                {
-                    b.HasOne("ShoppeFake.Domain.Entities.Cart", null)
-                        .WithMany("CartItems")
-                        .HasForeignKey("CartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ShoppeFake.Domain.Entities.ProductVariant", null)
-                        .WithMany("CartItems")
-                        .HasForeignKey("ProductVariantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ShoppeFake.Domain.Entities.Feedback", b =>
                 {
                     b.HasOne("ShoppeFake.Domain.Entities.Account", "Account")
@@ -518,9 +434,6 @@ namespace ShoppeFake.Infrastructure.Migrations
 
             modelBuilder.Entity("ShoppeFake.Domain.Entities.Account", b =>
                 {
-                    b.Navigation("Cart")
-                        .IsRequired();
-
                     b.Navigation("Feedbacks");
                 });
 
@@ -534,11 +447,6 @@ namespace ShoppeFake.Infrastructure.Migrations
             modelBuilder.Entity("ShoppeFake.Domain.Entities.AttributeValue", b =>
                 {
                     b.Navigation("VariantAttributeValues");
-                });
-
-            modelBuilder.Entity("ShoppeFake.Domain.Entities.Cart", b =>
-                {
-                    b.Navigation("CartItems");
                 });
 
             modelBuilder.Entity("ShoppeFake.Domain.Entities.Category", b =>
@@ -557,8 +465,6 @@ namespace ShoppeFake.Infrastructure.Migrations
 
             modelBuilder.Entity("ShoppeFake.Domain.Entities.ProductVariant", b =>
                 {
-                    b.Navigation("CartItems");
-
                     b.Navigation("ProductImages");
 
                     b.Navigation("VariantAttributeValues");

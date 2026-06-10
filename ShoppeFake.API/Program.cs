@@ -216,21 +216,6 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-//Seed data
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var initData = services.GetRequiredService<InitData>();
-        await initData.SeedAsync();
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Error Seeding Database");
-    }
-}
 //auto migration
 using (var scope = app.Services.CreateScope())
 {
@@ -249,6 +234,22 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Error Migrating Database");
     }
 }
+//Seed data
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var initData = services.GetRequiredService<InitData>();
+        await initData.SeedAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Error Seeding Database");
+    }
+}
+
 app.UseCors("AllowFrontend");  // Use the named policy
 app.UseHttpsRedirection();
 app.UseAuthentication();
