@@ -96,7 +96,7 @@ namespace ShoppeFake.Application.Services
             var user = await _userService.GetUserLoginsAsync();
             if (user.Value == null)
             {
-                return Result.Fail("Unauthorized", "User must be logged in to delete items from cart.");
+                return Result.Fail(Error.Unauthorized);
             }
             var cartItem = await _unitOfWork.GetRepository<CartItem>().FindAsync(x => x.Id == id && x.Cart.AccountId == user.Value.Id);
             if (cartItem == null)
