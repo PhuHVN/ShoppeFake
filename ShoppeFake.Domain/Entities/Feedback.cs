@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using ShoppeFake.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShoppeFake.Domain.Entities
 {
@@ -14,11 +10,12 @@ namespace ShoppeFake.Domain.Entities
         public int Rating { get; set; }
         public string Comment { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? UpdatedAt { get; set; } 
+        public DateTime? UpdatedAt { get; set; }
+        public StatusEnum Status { get; set; } = StatusEnum.Active;
         //nagivation
         public string AccountId { get; set; } = string.Empty;
         public Account Account { get; set; } = null!;
-        public int ProductId { get; set; } 
+        public int ProductId { get; set; }
         public Product Product { get; set; } = null!;
 
 

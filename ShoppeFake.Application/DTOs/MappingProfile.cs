@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ShoppeFake.Application.DTOs.AccountDtos;
 using ShoppeFake.Application.DTOs.AttributeDtos;
+using ShoppeFake.Application.DTOs.CartItemDtos;
 using ShoppeFake.Application.DTOs.CategoryDtos;
 using ShoppeFake.Application.DTOs.FeedbackDtos;
 using ShoppeFake.Application.DTOs.ImgDtos;
@@ -44,6 +45,10 @@ namespace ShoppeFake.Application.DTOs
             CreateMap<Feedback, FeedbackResponse>()
                 .ForMember(dest => dest.AccountName, opt => opt.MapFrom(src => src.Account.FullName))
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name));
+            CreateMap<CartItem, CartItemResponse>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.ProductVariant.Product.Name))
+                .ForMember(dest => dest.VariantName, opt => opt.MapFrom(src => src.ProductVariant.VariantName))
+                .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.ProductVariant.Price));
 
         }
         public class BasePaginatedListConverter<TSource, TDestination> : ITypeConverter<BasePaginatedList<TSource>, BasePaginatedList<TDestination>>

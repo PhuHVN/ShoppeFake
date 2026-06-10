@@ -37,10 +37,28 @@ namespace ShoppeFake.Application.Services
                 Role = Domain.Enums.RoleEnum.Customer,
                 Status = Domain.Enums.StatusEnum.Active
             };
-            await _unitOfWork.GetRepository<Account>().AddAsync(account);
-            await _unitOfWork.SaveChangesAsync();
-            var rs = _mapper.Map<AccountResponse>(account);
-            return Result<AccountResponse>.Success(rs);
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                await _unitOfWork.GetRepository<Account>().AddAsync(account);
+                await _unitOfWork.SaveChangesAsync();
+                var cart = new Cart
+                {
+                    AccountId = account.Id
+                };
+                await _unitOfWork.GetRepository<Cart>().AddAsync(cart);
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
+                var rs = _mapper.Map<AccountResponse>(account);
+                return Result<AccountResponse>.Success(rs);
+            }
+            catch (Exception ex)
+            {
+
+                await _unitOfWork.RollBackAsync();
+                return Result<AccountResponse>.Fail("DatabaseError", ex.Message);
+            }
+
         }
 
         public async Task<Result> DeleteAccount(string id)

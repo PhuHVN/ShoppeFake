@@ -18,6 +18,7 @@ namespace ShoppeFake.Domain.Entities
         public StatusEnum Status { get; set; } = StatusEnum.Active;
         //navigation
         public ICollection<Feedback> Feedbacks { get; set; } = null!;
+        public Cart Cart { get; set; } = null!;
 
     }
 }

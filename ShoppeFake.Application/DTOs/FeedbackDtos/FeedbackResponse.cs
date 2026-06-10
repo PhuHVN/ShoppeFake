@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ShoppeFake.Application.DTOs.FeedbackDtos
+﻿namespace ShoppeFake.Application.DTOs.FeedbackDtos
 {
     public class FeedbackResponse
     {
@@ -15,6 +9,6 @@ namespace ShoppeFake.Application.DTOs.FeedbackDtos
         public string ProductName { get; set; } = string.Empty;
         public int Rating { get; set; }
         public string Comment { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; 
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
