@@ -15,27 +15,31 @@ namespace ShoppeFake.Infrastructure.SeedData
         }
         public async Task SeedAsync()
         {
-            if (!_context.Accounts.Any())
+            var adminExists = _context.Accounts.Any(a => a.Role == Domain.Enums.RoleEnum.Admin);
+            if (adminExists)
             {
-                var adminEmail = _configuration["Admin:Email"];
-                var adminPassword = _configuration["Admin:Password"];
-                if (adminEmail == null || adminPassword == null)
-                {
-                    throw new InvalidOperationException("Admin email or password is not configured.");
-                }
-                var adminAccount = new Domain.Entities.Account
-                {
-
-                    Email = adminEmail,
-                    Password = BCrypt.Net.BCrypt.HashPassword(adminPassword),
-                    FullName = "Administrator",
-                    Role = Domain.Enums.RoleEnum.Admin,
-                    Status = Domain.Enums.StatusEnum.Active,
-                    CreatedAt = DateTime.UtcNow
-                };
-                await _context.Accounts.AddAsync(adminAccount);
-                await _context.SaveChangesAsync();
+                return;
             }
+
+            var adminEmail = _configuration["Admin:Email"];
+            var adminPassword = _configuration["Admin:Password"];
+            if (adminEmail == null || adminPassword == null)
+            {
+                throw new InvalidOperationException("Admin email or password is not configured.");
+            }
+            var adminAccount = new Domain.Entities.Account
+            {
+
+                Email = adminEmail,
+                Password = BCrypt.Net.BCrypt.HashPassword(adminPassword),
+                FullName = "Administrator",
+                Role = Domain.Enums.RoleEnum.Admin,
+                Status = Domain.Enums.StatusEnum.Active,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _context.Accounts.AddAsync(adminAccount);
+            await _context.SaveChangesAsync();
+
         }
     }
 }
