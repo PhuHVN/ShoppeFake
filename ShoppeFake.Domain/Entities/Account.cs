@@ -16,7 +16,8 @@ namespace ShoppeFake.Domain.Entities
         public DateTime? LastUpdatedAt { get; set; }
         public RoleEnum Role { get; set; } = RoleEnum.Customer;
         public StatusEnum Status { get; set; } = StatusEnum.Active;
-
+        //navigation
+        public ICollection<Feedback> Feedbacks { get; set; } = null!;
 
     }
 }
