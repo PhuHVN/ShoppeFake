@@ -24,6 +24,10 @@ namespace ShoppeFake.Application.Services
 
         public async Task<Result<CartItemResponse>> CreateCartItemAsync(CartItemRequest request)
         {
+            if (request.Quantity <= 0)
+            {
+                return Result<CartItemResponse>.Fail("InvalidQuantity", "Quantity must be greater than zero.");
+            }
             var cartResult = await GetOrCreateCartByAccountLoginAsync();
             if (!cartResult.IsSuccess)
             {
@@ -31,16 +35,23 @@ namespace ShoppeFake.Application.Services
             }
             var cart = cartResult.Value!;
             var productVariant = await _unitOfWork.GetRepository<ProductVariant>().FindAsync(x => x.Id == request.ProductVariantId);
-            if (productVariant != null)
+            if (productVariant == null)
             {
-                if (request.Quantity > productVariant.StockQuantity)
-                {
-                    return Result<CartItemResponse>.Fail("OutOfStock", $"Only {productVariant.StockQuantity} items left in stock.");
-                }
+                return Result<CartItemResponse>.Fail("NotFound", "Product variant not found.");
             }
+
+            if (request.Quantity > productVariant.StockQuantity)
+            {
+                return Result<CartItemResponse>.Fail("OutOfStock", $"Only {productVariant.StockQuantity} items left in stock.");
+            }
+
             var existingCartItem = await _unitOfWork.GetRepository<CartItem>().FindAsync(x => x.CartId == cart.Id && x.ProductVariantId == request.ProductVariantId);
             if (existingCartItem != null)
             {
+                if (existingCartItem.Quantity + request.Quantity > productVariant.StockQuantity)
+                {
+                    return Result<CartItemResponse>.Fail("OutOfStock", $"Adding {request.Quantity} items exceeds available stock. Only {productVariant.StockQuantity - existingCartItem.Quantity} more items can be added.");
+                }
                 existingCartItem.Quantity += request.Quantity;
                 existingCartItem.UpdatedAt = DateTime.UtcNow;
                 await _unitOfWork.GetRepository<CartItem>().UpdateAsync(existingCartItem);
@@ -82,12 +93,17 @@ namespace ShoppeFake.Application.Services
 
         public async Task<Result> DeleteCartItemAsync(int id)
         {
-            var cartItem = await _unitOfWork.GetRepository<CartItem>().FindAsync(x => x.Id == id);
+            var user = await _userService.GetUserLoginsAsync();
+            if (user.Value == null)
+            {
+                return Result.Fail("Unauthorized", "User must be logged in to delete items from cart.");
+            }
+            var cartItem = await _unitOfWork.GetRepository<CartItem>().FindAsync(x => x.Id == id && x.Cart.AccountId == user.Value.Id);
             if (cartItem == null)
             {
                 return Result.Fail(Error.NotFound);
             }
-            await _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItem);
+            await _unitOfWork.GetRepository<CartItem>().DeleteAsync(id);
             await _unitOfWork.SaveChangesAsync();
             return Result.Success();
         }
@@ -105,7 +121,7 @@ namespace ShoppeFake.Application.Services
                 return Result<BasePaginatedList<CartItemResponse>>.Fail(cartResult.Error);
             }
             var cart = cartResult.Value!;
-            var query = _unitOfWork.GetRepository<CartItem>().Entity.Include(x => x.ProductVariant).ThenInclude(pv => pv.Product).Where(x => x.CartId == cart.Id);
+            var query = _unitOfWork.GetRepository<CartItem>().Entity.AsNoTracking().Include(x => x.ProductVariant).ThenInclude(pv => pv.Product).Where(x => x.CartId == cart.Id);
             var rs = await _unitOfWork.GetRepository<CartItem>().GetPagging(query, pageIndex, pageSize);
             var response = _mapper.Map<BasePaginatedList<CartItemResponse>>(rs);
             return Result<BasePaginatedList<CartItemResponse>>.Success(response);

@@ -64,7 +64,7 @@ namespace ShoppeFake.Application.Services
 
         public async Task<Result<BasePaginatedList<ProductResponse>>> GetAllProductsAsync(int pageIndex, int pageSize)
         {
-            var products = _unitOfWork.GetRepository<Product>().Entity.Include(x => x.Category).Where(x => x.Status == Domain.Enums.StatusEnum.Active);
+            var products = _unitOfWork.GetRepository<Product>().Entity.AsNoTracking().Include(x => x.Category).Where(x => x.Status == Domain.Enums.StatusEnum.Active);
             var rs = await _unitOfWork.GetRepository<Product>().GetPagging(products, pageIndex, pageSize);
             var response = _mapper.Map<BasePaginatedList<ProductResponse>>(rs);
             return Result<BasePaginatedList<ProductResponse>>.Success(response);

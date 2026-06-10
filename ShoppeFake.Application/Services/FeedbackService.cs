@@ -12,10 +12,12 @@ namespace ShoppeFake.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        public FeedbackService(IUnitOfWork unitOfWork, IMapper mapper)
+        private readonly IUserService _userService;
+        public FeedbackService(IUnitOfWork unitOfWork, IMapper mapper, IUserService userService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _userService = userService;
         }
         public async Task<Result<FeedbackResponse>> CreateFeedbackAsync(FeedbackRequest request)
         {
@@ -24,8 +26,8 @@ namespace ShoppeFake.Application.Services
             {
                 return Result<FeedbackResponse>.Fail("ProductNotFound", "The specified product does not exist or is not active.");
             }
-            var account = await _unitOfWork.GetRepository<Account>().FindAsync(x => x.Id == request.AccountId && x.Status == Domain.Enums.StatusEnum.Active);
-            if (account == null)
+            var account = await _userService.GetUserLoginsAsync();
+            if (account.Value == null)
             {
                 return Result<FeedbackResponse>.Fail("AccountNotFound", "The specified account does not exist or is not active.");
             }
@@ -36,7 +38,7 @@ namespace ShoppeFake.Application.Services
             var feedback = new Feedback
             {
                 ProductId = request.ProductId,
-                AccountId = request.AccountId,
+                AccountId = account.Value.Id,
                 Rating = request.Rating,
                 Comment = request.Comment,
                 CreatedAt = DateTime.UtcNow
@@ -55,6 +57,7 @@ namespace ShoppeFake.Application.Services
         public async Task<Result<BasePaginatedList<FeedbackResponse>>> GetFeedbacksByProductIdAsync(int productId, int pageIndex, int pageSize)
         {
             var feedbacks = _unitOfWork.GetRepository<Feedback>().Entity
+                .AsNoTracking()
                 .Include(x => x.Product).Include(x => x.Account)
                 .Where(x => x.ProductId == productId)
                 .OrderByDescending(x => x.CreatedAt);
