@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ShoppeFake.Application.DTOs;
+using ShoppeFake.Application.DTOs.ExcelDtos;
 using ShoppeFake.Application.DTOs.VariantDtos;
 using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Abstractions;
@@ -41,6 +42,16 @@ namespace ShoppeFake.API.Controllers
             }
             return BadRequest(ApiResponse<BasePaginatedList<VariantResponse>>.BadRequestResponse("Failed to get variants"));
         }
+
+        [HttpGet("export")]
+        [SwaggerOperation(summary: "Get all product variants for export", description: "Retrieves a list of all product variants for export purposes.")]
+        public async Task<IActionResult> GetAll2()
+        {
+            var result = await _variantProductService.GetAllToExportAsync();
+            return Ok(ApiResponse<IList<ProductVariantExportDto>>.OkResponse(result, "Get All Variants", "200"));
+        }
+
+
         [HttpGet("{id}")]
         [SwaggerOperation(summary: "Get product variant by ID", description: "Retrieves the details of a product variant using its unique identifier.")]
         public async Task<IActionResult> GetById(int id)

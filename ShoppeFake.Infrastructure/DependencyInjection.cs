@@ -18,6 +18,7 @@ namespace ShoppeFake.Infrastructure
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IRedisService, OtpCacheService>();
             services.AddScoped<ICloudinaryService, CloudinaryService>();
+            services.AddScoped<IExcelService, ExcelService>();
             services.AddScoped<InitData>();
         }
 

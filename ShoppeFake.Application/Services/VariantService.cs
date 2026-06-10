@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using ShoppeFake.Application.DTOs.ExcelDtos;
 using ShoppeFake.Application.DTOs.VariantDtos;
 using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Abstractions;
 using ShoppeFake.Domain.Common.Results;
 using ShoppeFake.Domain.Entities;
+using ShoppeFake.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -129,6 +131,74 @@ namespace ShoppeFake.Application.Services
             return Result<BasePaginatedList<VariantResponse>>.Success(response);
         }
 
+        public async Task<IList<ProductVariantExportDto>> GetAllToExportAsync()
+        {
+            var variants = await _unitOfWork.GetRepository<ProductVariant>().Entity
+                .AsNoTracking()
+                .Where(x => x.Status == StatusEnum.Active)
+                .OrderByDescending(x => x.CreatedAt)
+                .Select(x => new ProductVariantExportDto
+                {
+                    ProductId = x.ProductId,
+                    VariantId = x.Id,
+                    ProductName = x.Product.Name,
+                    ProductDescription = x.Product.Description,
+                    CategoryName = x.Product.Category.Name,
+                    BrandName = x.Product.Brand,
+                    VariantName = x.VariantName,
+                    Sku = x.Sku,
+                    Price = x.Price,
+                    StockQuantity = x.StockQuantity,
+                    WeightGrams = x.WeightGrams,
+                    Status = x.Status.ToString(),
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt
+                })
+                .ToListAsync();
+
+            var variantIds = variants.Select(x => x.VariantId).ToList();
+
+            var images = await _unitOfWork.GetRepository<ProductImage>().Entity
+                .AsNoTracking()
+                .Where(x => variantIds.Contains(x.VariantId))
+                .Select(x => new { x.VariantId, x.ImageUrl })
+                .ToListAsync();
+
+            var attributes = await _unitOfWork.GetRepository<VariantAttributeValue>().Entity
+                .AsNoTracking()
+                .Where(x => variantIds.Contains(x.ProductVariantId))
+                .Select(x => new
+                {
+                    x.ProductVariantId,
+                    AttributeName = x.Attribute.Name,
+                    ValueText = x.AttributeValue.ValueText
+                })
+                .ToListAsync();
+
+            var imagesByVariant = images
+                .GroupBy(x => x.VariantId)
+                .ToDictionary(g => g.Key, g => string.Join("|", g.Select(x => x.ImageUrl)));
+
+            var attrsByVariant = attributes
+                .GroupBy(x => x.ProductVariantId)
+                .ToDictionary(g => g.Key, g => string.Join("; ", g.Select(x => $"{x.AttributeName}: {x.ValueText}")));
+
+            foreach (var item in variants)
+            {
+                item.ImageUrls = imagesByVariant.GetValueOrDefault(item.VariantId) ?? "";
+                item.Attributes = attrsByVariant.GetValueOrDefault(item.VariantId) ?? "";
+            }
+
+            return variants;
+        }
+
+        public async Task<int> CountActiveVariantsAsync()
+        {
+            return await _unitOfWork.GetRepository<ProductVariant>()
+                .Entity
+                .AsNoTracking()
+                .CountAsync(x => x.Status == StatusEnum.Active);
+        }
         public async Task<Result<VariantResponse>> GetVariantByIdAsync(int id)
         {
             var variant = await _unitOfWork.GetRepository<ProductVariant>().FindAsync(x => x.Id == id && x.Status == Domain.Enums.StatusEnum.Active);
