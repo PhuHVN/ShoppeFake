@@ -19,7 +19,10 @@ namespace ShoppeFake.Infrastructure.SeedData
             {
                 var adminEmail = _configuration["Admin:Email"];
                 var adminPassword = _configuration["Admin:Password"];
-
+                if (adminEmail == null || adminPassword == null)
+                {
+                    throw new InvalidOperationException("Admin email or password is not configured.");
+                }
                 var adminAccount = new Domain.Entities.Account
                 {
 

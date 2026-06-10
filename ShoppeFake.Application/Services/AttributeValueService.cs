@@ -1,18 +1,12 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using ShoppeFake.Application.DTOs.ValueDtos;
 using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Abstractions;
 using ShoppeFake.Domain.Common.Results;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShoppeFake.Application.Services
 {
-    
+
     public class AttributeValueService : IAttributeValueService
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -24,19 +18,21 @@ namespace ShoppeFake.Application.Services
         }
         public async Task<Result<ValueResponse>> CreateValueAsync(ValueRequest request)
         {
-            if(string.IsNullOrEmpty(request.ValueText) || string.IsNullOrEmpty(request.Slug))
+            if (string.IsNullOrEmpty(request.ValueText) || string.IsNullOrEmpty(request.Slug))
             {
                 return Result<ValueResponse>.Fail("InvalidData", "ValueText and Slug are required.");
             }
             var attribute = await _unitOfWork.GetRepository<Domain.Entities.Attribute>().FindAsync(x => x.Id == request.AttributeId);
-            if(attribute == null)
+            if (attribute == null)
             {
                 return Result<ValueResponse>.Fail("NotFound", "Attribute not found.");
             }
             var existingValue = await _unitOfWork.GetRepository<Domain.Entities.AttributeValue>().FindAsync(x => x.Slug == request.Slug || x.ValueText == request.ValueText);
-            if (existingValue != null) {
+            if (existingValue != null)
+            {
                 return Result<ValueResponse>.Fail("Conflict", "A value with the same slug or value text already exists.");
             }
+
             var newValue = new Domain.Entities.AttributeValue
             {
                 AttributeId = attribute.Id,

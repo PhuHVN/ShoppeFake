@@ -30,7 +30,7 @@ namespace ShoppeFake.Infrastructure.DatabaseSettings
                 .HasIndex(c => c.Name)
                 .IsUnique();
             modelBuilder.Entity<AttributeValue>()
-                .HasIndex(c => new { c.AttributeId,c.Slug })
+                .HasIndex(c => new { c.AttributeId, c.Slug })
                 .IsUnique();
             modelBuilder.Entity<VariantAttributeValue>()
                 .HasIndex(v => new { v.AttributeId, v.ProductVariantId })

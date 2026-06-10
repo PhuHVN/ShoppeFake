@@ -51,7 +51,7 @@ namespace ShoppeFake.Application.Services
 
         public async Task<Result> DeleteProductAsync(int id)
         {
-            var product = await _unitOfWork.GetRepository<Product>().FindAsync(x => x.Id == id, include: x => x.Include(x => x.Category));
+            var product = await _unitOfWork.GetRepository<Product>().FindAsync(x => x.Id == id && x.Status == Domain.Enums.StatusEnum.Active, include: x => x.Include(x => x.Category));
             if (product == null)
             {
                 return Result.Fail(Error.NotFound);
@@ -72,7 +72,7 @@ namespace ShoppeFake.Application.Services
 
         public async Task<Result<ProductResponse>> GetProductByIdAsync(int id)
         {
-            var product = await _unitOfWork.GetRepository<Product>().FindAsync(x => x.Id == id, include: x => x.Include(x => x.Category));
+            var product = await _unitOfWork.GetRepository<Product>().FindAsync(x => x.Id == id && x.Status == Domain.Enums.StatusEnum.Active, include: x => x.Include(x => x.Category));
             if (product == null)
             {
                 return Result<ProductResponse>.Fail(Error.NotFound);
@@ -82,7 +82,7 @@ namespace ShoppeFake.Application.Services
 
         public async Task<Result<ProductResponse>> UpdateProductAsync(int id, ProductRequest request)
         {
-            var product = await _unitOfWork.GetRepository<Product>().FindAsync(x => x.Id == id, include: x => x.Include(x => x.Category));
+            var product = await _unitOfWork.GetRepository<Product>().FindAsync(x => x.Id == id && x.Status == Domain.Enums.StatusEnum.Active, include: x => x.Include(x => x.Category));
             if (product == null)
             {
                 return Result<ProductResponse>.Fail(Error.NotFound);

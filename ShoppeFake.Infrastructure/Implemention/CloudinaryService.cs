@@ -2,11 +2,6 @@
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Http;
 using ShoppeFake.Application.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShoppeFake.Infrastructure.Implemention
 {

@@ -24,14 +24,15 @@ namespace ShoppeFake.Application.Services
             {
                 return Result<AccountResponse>.Fail("InvalidInput", "Email, Password and FullName are required.");
             }
-            if (Regex.IsMatch(request.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            if (!Regex.IsMatch(request.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
             {
                 throw new ArgumentException("Invalid email format.");
             }
+            var hashpassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
             var account = new Account
             {
                 Email = request.Email,
-                Password = request.Password,
+                Password = hashpassword,
                 FullName = request.FullName,
                 Role = Domain.Enums.RoleEnum.Customer,
                 Status = Domain.Enums.StatusEnum.Active
