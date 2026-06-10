@@ -18,7 +18,8 @@ namespace ShoppeFake.Application
             services.AddScoped<IVariantService, VariantService>();
             services.AddScoped<IProductImageService, ImageService>();
             services.AddScoped<IFeedbackService, FeedbackService>();
-
+            services.AddScoped<ICartItemService, CartItemService>();
+            services.AddScoped<IUserService, UserService>();
         }
 
 

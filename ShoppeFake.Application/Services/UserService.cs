@@ -18,7 +18,7 @@ namespace ShoppeFake.Application.Services
             _http = http;
         }
 
-        public async Task<Result<Account>> GetUserIdLoginsAsync()
+        public async Task<Result<Account>> GetUserLoginsAsync()
         {
             var context = _http.HttpContext;
             var userId = context?.User.FindFirst(ClaimTypes.NameIdentifier);

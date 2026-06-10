@@ -5,6 +5,6 @@ namespace ShoppeFake.Application.Interfaces
 {
     public interface IUserService
     {
-        Task<Result<Account>> GetUserIdLoginsAsync();
+        Task<Result<Account>> GetUserLoginsAsync();
     }
 }

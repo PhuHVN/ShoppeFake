@@ -83,18 +83,26 @@ namespace ShoppeFake.Application.Services
                 Role = Domain.Enums.RoleEnum.Customer,
                 CreatedAt = DateTime.UtcNow
             };
-
+            await _unitOfWork.BeginTransactionAsync();
             try
             {
 
                 await _unitOfWork.GetRepository<Account>().AddAsync(newUser);
                 await _unitOfWork.SaveChangesAsync();
+                var cart = new Cart
+                {
+                    AccountId = newUser.Id,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _unitOfWork.GetRepository<Cart>().AddAsync(cart);
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
                 return Result<string>.Success("Registration successful.");
             }
             catch (Exception ex)
             {
-
-                return Result<string>.Fail("RegistrationError", "An error occurred while registering the account.");
+                await _unitOfWork.RollBackAsync();
+                return Result<string>.Fail("RegistrationError", ex.Message);
             }
 
         }
