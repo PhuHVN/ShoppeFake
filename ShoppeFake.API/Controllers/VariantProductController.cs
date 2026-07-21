@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.ExcelDtos;
 using ShoppeFake.Application.DTOs.VariantDtos;
@@ -17,8 +18,10 @@ namespace ShoppeFake.API.Controllers
         {
             _variantProductService = variantProductService;
         }
+
         [HttpPost]
-        [SwaggerOperation(summary: "Create a new product variant", description: "Creates a new product variant and associates it with the provided attribute value IDs.")]
+        [Authorize(Roles = "Admin")]
+        [SwaggerOperation(summary: "Admin - Create a new product variant", description: "Creates a new product variant and associates it with the provided attribute value IDs.")]
         public async Task<IActionResult> Add([FromQuery] IList<int> valueIds, [FromBody] VariantRequest request)
         {
             var result = await _variantProductService.CreateVariantAsync(valueIds, request);
@@ -31,7 +34,7 @@ namespace ShoppeFake.API.Controllers
 
 
         [HttpGet]
-        [SwaggerOperation(summary: "Get all product variants", description: "Retrieves a paginated list of all product variants.")]
+        [SwaggerOperation(summary: "Public - Get all product variants", description: "Retrieves a paginated list of all product variants.")]
         public async Task<IActionResult> GetAll(int pageIndex = 1, int pageSize = 10)
         {
             var result = await _variantProductService.GetAllVariantsAsync(pageIndex, pageSize);
@@ -43,7 +46,8 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpGet("export")]
-        [SwaggerOperation(summary: "Get all product variants for export", description: "Retrieves a list of all product variants for export purposes.")]
+        [Authorize(Roles = "Admin")]
+        [SwaggerOperation(summary: "Admin - Export product variants", description: "Retrieves a list of all product variants for export purposes.")]
         public async Task<IActionResult> GetAll2()
         {
             var result = await _variantProductService.GetAllToExportAsync();
@@ -52,7 +56,7 @@ namespace ShoppeFake.API.Controllers
 
 
         [HttpGet("{id}")]
-        [SwaggerOperation(summary: "Get product variant by ID", description: "Retrieves the details of a product variant using its unique identifier.")]
+        [SwaggerOperation(summary: "Public - Get product variant by ID", description: "Retrieves the details of a product variant using its unique identifier.")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _variantProductService.GetVariantByIdAsync(id);
@@ -63,7 +67,8 @@ namespace ShoppeFake.API.Controllers
             return BadRequest(ApiResponse<VariantResponse>.BadRequestResponse("Failed to get variant"));
         }
         [HttpDelete("{id}")]
-        [SwaggerOperation(summary: "Delete a product variant", description: "Deletes a product variant using its unique identifier.")]
+        [Authorize(Roles = "Admin")]
+        [SwaggerOperation(summary: "Admin - Delete a product variant", description: "Deletes a product variant using its unique identifier.")]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _variantProductService.DeleteVariantAsync(id);
@@ -74,7 +79,8 @@ namespace ShoppeFake.API.Controllers
             return BadRequest(ApiResponse<string>.BadRequestResponse("Failed to delete variant"));
         }
         [HttpPut("{id}")]
-        [SwaggerOperation(summary: "Update a product variant", description: "Updates the details of an existing product variant.")]
+        [Authorize(Roles = "Admin")]
+        [SwaggerOperation(summary: "Admin - Update a product variant", description: "Updates the details of an existing product variant.")]
         public async Task<IActionResult> Update(int id, [FromBody] VariantRequest request)
         {
             var result = await _variantProductService.UpdateVariantAsync(id, request);

@@ -19,7 +19,10 @@ namespace ShoppeFake.Infrastructure
             services.AddScoped<IRedisService, OtpCacheService>();
             services.AddScoped<ICloudinaryService, CloudinaryService>();
             services.AddScoped<IExcelService, ExcelService>();
+            services.AddScoped<IChatApiClient, ChatApiClient>();
+            services.AddScoped<IChatApiService, ChatApiService>();
             services.AddScoped<InitData>();
+            
         }
 
     }

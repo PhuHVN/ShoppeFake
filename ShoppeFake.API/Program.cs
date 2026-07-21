@@ -2,9 +2,11 @@ using AutoMapper;
 using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using ShoppeFake.API;
 using ShoppeFake.Application.DTOs;
+using ShoppeFake.Application.DTOs.ChatApiDtos;
 using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Enums.EnumConfig;
 using ShoppeFake.Infrastructure.DatabaseSettings;
@@ -199,6 +201,24 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
 
     return ConnectionMultiplexer.Connect(options);
 });
+//Implement ChatBot API Service
+builder.Services.Configure<ChatApiOptions>(builder.Configuration.GetSection(ChatApiOptions.SectionName));
+builder.Services.AddHttpClient<IChatApiClient, ChatApiClient>(
+    (serviceProvider, httpClient) =>
+    {
+        var configuration = serviceProvider
+            .GetRequiredService<IConfiguration>();
+
+        var baseUrl = configuration["ChatApi:BaseUrl"];
+        var apiKey = configuration["ChatApi:ApiKey"];
+
+        httpClient.BaseAddress = new Uri(baseUrl!);
+        httpClient.Timeout = TimeSpan.FromSeconds(90);
+
+        httpClient.DefaultRequestHeaders.Add(
+            "x-api-key",
+            apiKey);
+    });
 
 //mapper configuration
 var mapperConfig = new MapperConfiguration(cfg =>

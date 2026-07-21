@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.CartItemDtos;
 using ShoppeFake.Application.Interfaces;
@@ -9,6 +10,7 @@ namespace ShoppeFake.API.Controllers
 {
     [Route("api/v1/cart-items")]
     [ApiController]
+    [Authorize(Roles = "Customer")]
     public class CartItemController : ControllerBase
     {
         private readonly ICartItemService _cartItemService;
@@ -19,7 +21,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpPost]
-        [SwaggerOperation(Summary = "Create a new cart item", Description = "Adds a new item to the shopping cart.")]
+        [SwaggerOperation(summary: "Customer - Create a new cart item", description: "Adds a new item to the shopping cart.")]
         public async Task<IActionResult> CreateCartItem([FromBody] CartItemRequest request)
         {
             var result = await _cartItemService.CreateCartItemAsync(request);
@@ -31,7 +33,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpGet]
-        [SwaggerOperation(Summary = "Get cart items for a specific account", Description = "Retrieves the list of cart items for a specific account.")]
+        [SwaggerOperation(summary: "Customer - Get own cart items", description: "Retrieves the list of cart items for a specific account.")]
         public async Task<IActionResult> GetCartItemsByAccount([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
         {
             var result = await _cartItemService.GetCartItemsByAccountAsync(pageIndex, pageSize);
@@ -42,7 +44,7 @@ namespace ShoppeFake.API.Controllers
             return BadRequest(result.Error);
         }
         [HttpPut("{id}/{quantity}")]
-        [SwaggerOperation(Summary = "Update cart item quantity", Description = "Updates the quantity of a specific cart item.")]
+        [SwaggerOperation(summary: "Customer - Update own cart item quantity", description: "Updates the quantity of a specific cart item.")]
         public async Task<IActionResult> UpdateCartItemQuantity(int id, int quantity)
         {
             var result = await _cartItemService.UpdateCartItemAsync(id, quantity);
@@ -54,7 +56,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [SwaggerOperation(Summary = "Delete a cart item", Description = "Removes a specific item from the shopping cart.")]
+        [SwaggerOperation(summary: "Customer - Delete own cart item", description: "Removes a specific item from the shopping cart.")]
         public async Task<IActionResult> DeleteCartItem(int id)
         {
             var result = await _cartItemService.DeleteCartItemAsync(id);

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.ImgDtos;
 using ShoppeFake.Application.Interfaces;
@@ -19,7 +20,8 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpPost("upload")]
-        [SwaggerOperation(summary: "Upload a product image", description: "Uploads a product image from form data and returns the stored image information.")]
+        [Authorize(Roles = "Admin")]
+        [SwaggerOperation(summary: "Admin - Upload a product image", description: "Uploads a product image from form data and returns the stored image information.")]
         public async Task<IActionResult> UploadProductImage([FromForm] ImageDtos imageDtos)
         {
             var result = await _productImageService.UploadProductImageAsync(imageDtos);
@@ -30,7 +32,7 @@ namespace ShoppeFake.API.Controllers
             return Ok(ApiResponse<string>.OkResponse(result.Value, "Image uploaded successfully", "201"));
         }
         [HttpGet]
-        [SwaggerOperation(summary: "Get all product images", description: "Retrieves a paginated list of all product images.")]
+        [SwaggerOperation(summary: "Public - Get all product images", description: "Retrieves a paginated list of all product images.")]
         public async Task<IActionResult> ListProductImages([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
         {
             var result = await _productImageService.ListProductImagesAsync(pageIndex, pageSize);

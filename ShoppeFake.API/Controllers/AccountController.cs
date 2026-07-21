@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.AccountDtos;
 using ShoppeFake.Application.Interfaces;
@@ -9,6 +10,7 @@ namespace ShoppeFake.API.Controllers
 {
     [Route("api/v1/accounts")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accountService;
@@ -18,7 +20,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpPost]
-        [SwaggerOperation(summary: "Create a new account", description: "Creates a new user account with the provided details.")]
+        [SwaggerOperation(summary: "Admin - Create a new account", description: "Creates a new user account with the provided details.")]
         public async Task<IActionResult> CreateAccount(AccountRequest request)
         {
             var result = await _accountService.CreateAccount(request);
@@ -30,7 +32,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [SwaggerOperation(summary: "Get account by ID", description: "Retrieves the details of an account using its unique identifier.")]
+        [SwaggerOperation(summary: "Admin - Get account by ID", description: "Retrieves the details of an account using its unique identifier.")]
         public async Task<IActionResult> GetAccountById(string id)
         {
             var result = await _accountService.GetAccountById(id);
@@ -42,7 +44,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpGet]
-        [SwaggerOperation(summary: "Get all accounts", description: "Retrieves a paginated list of all accounts.")]
+        [SwaggerOperation(summary: "Admin - Get all accounts", description: "Retrieves a paginated list of all accounts.")]
         public async Task<IActionResult> GetAllAccounts(int pageIndex = 1, int pageSize = 10)
         {
 
@@ -55,7 +57,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpPut]
-        [SwaggerOperation(summary: "Update an account", description: "Updates the details of an existing account.")]
+        [SwaggerOperation(summary: "Admin - Update an account", description: "Updates the details of an existing account.")]
         public async Task<IActionResult> UpdateAccount(AccountRequest request)
         {
             var result = await _accountService.UpdateAccount(request);
@@ -67,7 +69,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpDelete]
-        [SwaggerOperation(summary: "Delete an account", description: "Deletes an account using its unique identifier.")]
+        [SwaggerOperation(summary: "Admin - Delete an account", description: "Deletes an account using its unique identifier.")]
         public async Task<IActionResult> DeleteAccount(string id)
         {
             await _accountService.DeleteAccount(id);

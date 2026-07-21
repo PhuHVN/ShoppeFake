@@ -11,29 +11,32 @@ services:
       # ASP.NET Core settings
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:8080
-      
+
       # Database connection - customize with your external PostgreSQL
-      DefaultConnection: ${DEFAULT_CONNECTION:-Server=localhost;Port=5432;Database=ShoppeFakeDB;User Id=postgres;Password=YourPasswordHere123!;}
-      
+      DefaultConnection: ${CONNECTIONSTRINGS__DEFAULTCONNECTION:-Server=localhost;Port=5432;Database=ShoppeFakeDB;User Id=postgres;Password=YourPasswordHere123!;}
+
       # JWT configuration
-      Jwt__SecretKey: ${JWT_SECRET_KEY:-your-secret-key-change-this-in-production}
-      Jwt__Issuer: ${JWT_ISSUER:-ShoppeFakeAPI}
-      Jwt__Audience: ${JWT_AUDIENCE:-ShoppeFakeClient}
-      Jwt__ExpirationInMinutes: ${JWT_EXPIRATION:-60}
-  
+      Jwt__SecretKey: ${JWT__SECRETKEY:-your-secret-key-change-this-in-production}
+      Jwt__Issuer: ${JWT__ISSUER:-ShoppeFakeAPI}
+      Jwt__Audience: ${JWT__AUDIENCE:-ShoppeFakeClient}
+      Jwt__ExpirationInMinutes: ${JWT__EXPIRATION:-60}
+
       # Email configuration (Mailgun or your SMTP)
-      Email__SmtpServer: ${EMAIL_SMTP_SERVER:-smtp.mailtrap.io}
-      Email__SmtpPort: ${EMAIL_SMTP_PORT:-2525}
-      Email__SenderName: ${EMAIL_SENDER_NAME:-ShoppeFake}
-      Email__SenderEmail: ${EMAIL_SENDER_EMAIL:-noreply@shoppefake.com}
-      Email__Username: ${EMAIL_USERNAME:-}
-      Email__Password: ${EMAIL_PASSWORD:-}
-      
+      Email__SmtpServer: ${EMAIL__SMTPSERVER:-smtp.mailtrap.io}
+      Email__SmtpPort: ${EMAIL__SMTPPORT:-2525}
+      Email__SenderName: ${EMAIL__SENDERNAME:-ShoppeFake}
+      Email__SenderEmail: ${EMAIL__SENDEREMAIL:-noreply@shoppefake.com}
+      Email__Username: ${EMAIL__USERNAME:-}
+      Email__Password: ${EMAIL__PASSWORD:-}
+
       # Cloudinary configuration
-      Cloudinary__CloudName: ${CLOUDINARY_CLOUD_NAME:-}
-      Cloudinary__ApiKey: ${CLOUDINARY_API_KEY:-}
-      Cloudinary__ApiSecret: ${CLOUDINARY_API_SECRET:-}
-    
+      Cloudinary__CloudName: ${CLOUDINARY__CLOUDNAME:-}
+      Cloudinary__ApiKey: ${CLOUDINARY__APIKEY:-}
+      Cloudinary__ApiSecret: ${CLOUDINARY__APISECRET:-}
+      # Chat APi Client
+      ChatApi__BaseUrl: ${CHATAPI__BASEURL}
+      ChatApi__Apikey: ${CHATAPI__APIKEY}
+
     ports:
       - "${API_PORT:-8080}:8080"
     networks:
