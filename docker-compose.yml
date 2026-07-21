@@ -33,6 +33,9 @@ services:
       Cloudinary__CloudName: ${CLOUDINARY__CLOUDNAME:-}
       Cloudinary__ApiKey: ${CLOUDINARY__APIKEY:-}
       Cloudinary__ApiSecret: ${CLOUDINARY__APISECRET:-}
+      # Chat APi Client
+      ChatApi__BaseUrl: ${CHATAPI__BASEURL}
+      ChatApi__Apikey: ${CHATAPI__APIKEY}
 
     ports:
       - "${API_PORT:-8080}:8080"
