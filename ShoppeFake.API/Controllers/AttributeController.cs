@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.AttributeDtos;
 using ShoppeFake.Application.Interfaces;
@@ -18,7 +19,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpGet]
-        [SwaggerOperation(summary: "Get all attributes", description: "Retrieves a paginated list of all product attributes.")]
+        [SwaggerOperation(summary: "Public - Get all attributes", description: "Retrieves a paginated list of all product attributes.")]
         public async Task<IActionResult> GetAllAttributes(int pageIndex = 1, int pageSize = 10)
         {
             var result = await _attributeService.GetAllAttributesAsync(pageIndex, pageSize);
@@ -29,7 +30,7 @@ namespace ShoppeFake.API.Controllers
             return Ok(ApiResponse<BasePaginatedList<AttributeResponse>>.OkResponse(result.Value, "Attributes retrieved successfully", "200"));
         }
         [HttpGet("{id}")]
-        [SwaggerOperation(summary: "Get attribute by ID", description: "Retrieves the details of a product attribute using its unique identifier.")]
+        [SwaggerOperation(summary: "Public - Get attribute by ID", description: "Retrieves the details of a product attribute using its unique identifier.")]
         public async Task<IActionResult> GetAttributeById(int id)
         {
             var result = await _attributeService.GetAttributeByIdAsync(id);
@@ -40,7 +41,8 @@ namespace ShoppeFake.API.Controllers
             return Ok(ApiResponse<AttributeResponse>.OkResponse(result.Value, "Attribute retrieved successfully", "200"));
         }
         [HttpPost]
-        [SwaggerOperation(summary: "Create a new attribute", description: "Creates a new product attribute with the provided details.")]
+        [Authorize(Roles = "Admin")]
+        [SwaggerOperation(summary: "Admin - Create a new attribute", description: "Creates a new product attribute with the provided details.")]
         public async Task<IActionResult> CreateAttribute([FromBody] AttributeRequest request)
         {
             var result = await _attributeService.CreateAttributeAsync(request);

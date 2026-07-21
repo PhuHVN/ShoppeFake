@@ -131,7 +131,16 @@ namespace ShoppeFake.Application.Services
 
         public async Task<Result<CartItemResponse>> UpdateCartItemAsync(int id, int quantity)
         {
-            var cartItem = await _unitOfWork.GetRepository<CartItem>().FindAsync(x => x.Id == id);
+            if (quantity <= 0)
+            {
+                return Result<CartItemResponse>.Fail("InvalidQuantity", "Quantity must be greater than zero.");
+            }
+            var user = await _userService.GetUserLoginsAsync();
+            if (user.Value == null)
+            {
+                return Result<CartItemResponse>.Fail(Error.Unauthorized);
+            }
+            var cartItem = await _unitOfWork.GetRepository<CartItem>().FindAsync(x => x.Id == id && x.Cart.AccountId == user.Value.Id);
             if (cartItem == null)
             {
                 return Result<CartItemResponse>.Fail(Error.NotFound);

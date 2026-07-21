@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.ProductDtos;
 using ShoppeFake.Application.Interfaces;
@@ -17,7 +18,8 @@ namespace ShoppeFake.API.Controllers
             _productService = productService;
         }
         [HttpPost]
-        [SwaggerOperation(summary: "Create a new product", description: "Creates a new product with the provided details.")]
+        [Authorize(Roles = "Admin")]
+        [SwaggerOperation(summary: "Admin - Create a new product", description: "Creates a new product with the provided details.")]
         public async Task<IActionResult> CreateProduct(ProductRequest request)
         {
             var result = await _productService.CreateProductAsync(request);
@@ -27,8 +29,9 @@ namespace ShoppeFake.API.Controllers
             }
             return BadRequest(ApiResponse<ProductResponse>.BadRequestResponse("Failed to create product"));
         }
+
         [HttpGet]
-        [SwaggerOperation(summary: "Get all products", description: "Retrieves a paginated list of all products.")]
+        [SwaggerOperation(summary: "Public - Get all products", description: "Retrieves a paginated list of all products.")]
         public async Task<IActionResult> GetAllProducts(int pageIndex = 1, int pageSize = 10)
         {
             var result = await _productService.GetAllProductsAsync(pageIndex, pageSize);
@@ -38,8 +41,9 @@ namespace ShoppeFake.API.Controllers
             }
             return NotFound(ApiResponse<BasePaginatedList<ProductResponse>>.NotFoundResponse("No products found"));
         }
+
         [HttpGet("{id}")]
-        [SwaggerOperation(summary: "Get product by ID", description: "Retrieves the details of a product using its unique identifier.")]
+        [SwaggerOperation(summary: "Public - Get product by ID", description: "Retrieves the details of a product using its unique identifier.")]
         public async Task<IActionResult> GetProductById(int id)
         {
             var result = await _productService.GetProductByIdAsync(id);
@@ -49,8 +53,10 @@ namespace ShoppeFake.API.Controllers
             }
             return NotFound(ApiResponse<ProductResponse>.NotFoundResponse("Product not found"));
         }
+
         [HttpPut("{id}")]
-        [SwaggerOperation(summary: "Update a product", description: "Updates the details of an existing product.")]
+        [Authorize(Roles = "Admin")]
+        [SwaggerOperation(summary: "Admin - Update a product", description: "Updates the details of an existing product.")]
         public async Task<IActionResult> UpdateProduct(int id, ProductRequest request)
         {
             var result = await _productService.UpdateProductAsync(id, request);
@@ -60,8 +66,10 @@ namespace ShoppeFake.API.Controllers
             }
             return BadRequest(ApiResponse<ProductResponse>.BadRequestResponse("Failed to update product"));
         }
+
         [HttpDelete("{id}")]
-        [SwaggerOperation(summary: "Delete a product", description: "Deletes a product using its unique identifier.")]
+        [Authorize(Roles = "Admin")]
+        [SwaggerOperation(summary: "Admin - Delete a product", description: "Deletes a product using its unique identifier.")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var result = await _productService.DeleteProductAsync(id);
