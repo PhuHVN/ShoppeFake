@@ -75,7 +75,7 @@ namespace ShoppeFake.Infrastructure.Implemention
                 cancellationToken);
             return chatResponse;
         }
-        public async Task<ChatApiResponse<PagingResponse<ConversationMessageResponse>>?> GetCursorChatHistoryAsync(string conversationId, string lastCursor, int limit, CancellationToken cancellationToken = default)
+        public async Task<ChatApiResponse<PagingResponse<ConversationMessageResponse>>?> GetCursorChatHistoryAsync(string conversationId, string? lastCursor, int limit, CancellationToken cancellationToken = default)
         {
             var userLogin = await _userService.GetUserLoginsAsync();
             if (userLogin is null || userLogin.Value is null)
