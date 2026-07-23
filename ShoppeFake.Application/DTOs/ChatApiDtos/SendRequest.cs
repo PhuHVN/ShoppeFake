@@ -10,4 +10,5 @@ namespace ShoppeFake.Application.DTOs.ChatApiDtos
     {
         public string Message { get; set; } = string.Empty;
     }
+
 }

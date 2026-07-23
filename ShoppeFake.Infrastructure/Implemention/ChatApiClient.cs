@@ -1,18 +1,23 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using DocumentFormat.OpenXml.Math;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.Extensions.Logging;
 using ShoppeFake.Application.DTOs.ChatApiDtos;
 using ShoppeFake.Application.Interfaces;
+using ShoppeFake.Domain.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ShoppeFake.Infrastructure.Implemention
 {
     public sealed class ChatApiClient : IChatApiClient
     {
-        private const string Endpoint = "/api/v1/chat/conversations/messages";
+        private const string Endpoint = "/api/v1/chat/conversations";
         private readonly HttpClient _httpClient;
         private readonly ILogger<ChatApiClient> _logger;
 
@@ -22,18 +27,21 @@ namespace ShoppeFake.Infrastructure.Implemention
             _logger = logger;
         }
 
-        public async Task<ChatApiResponse?> SendMessageAsync(SendChatMessageRequest request, CancellationToken cancellationToken = default)
+
+
+        public async Task<ChatApiResponse?> SendMessageV1Async(SendChatMessageClientRequest request, CancellationToken cancellationToken = default)
         {
+            var urlMessage = Endpoint + "/messages";
             try
             {
-                using var response = await _httpClient.PostAsJsonAsync(Endpoint,request,cancellationToken);
+                using var response = await _httpClient.PostAsJsonAsync(urlMessage, request, cancellationToken);
 
                 var result = await response.Content.ReadFromJsonAsync<ChatApiResponse>(cancellationToken: cancellationToken);
 
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning(
-                        "Web1 Chat API returned {StatusCode}. Message: {Message}",
+                        "SmartChatBot API returned {StatusCode}. Message: {Message}",
                         response.StatusCode,
                         result?.Message);
 
@@ -46,7 +54,7 @@ namespace ShoppeFake.Infrastructure.Implemention
             {
                 _logger.LogError(
                     exception,
-                    "Cannot connect to Web1 Chat API.");
+                    "Cannot connect to SmartChatBot API.");
 
                 return null;
             }
@@ -55,10 +63,132 @@ namespace ShoppeFake.Infrastructure.Implemention
             {
                 _logger.LogError(
                     exception,
-                    "Web1 Chat API request timed out.");
+                    "SmartChatBot API request timed out.");
+
+                return null;
+            }
+        }
+        public async Task<ChatApiResponse?> SendMessageV2Async(string? conversationId, SendChatMessageClientRequest request, CancellationToken cancellationToken = default)
+        {
+            var url = Endpoint + $"/{conversationId}/message";
+            try
+            {
+                using var response = await _httpClient.PostAsJsonAsync(url, request, cancellationToken);
+
+                var result = await response.Content.ReadFromJsonAsync<ChatApiResponse>(cancellationToken: cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning(
+                        "SmartChatBot API returned {StatusCode}. Message: {Message}",
+                        response.StatusCode,
+                        result?.Message);
+
+                    return result;
+                }
+
+                return result;
+            }
+            catch (HttpRequestException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Cannot connect to SmartChatBot API.");
+
+                return null;
+            }
+            catch (TaskCanceledException exception)
+                when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogError(
+                    exception,
+                    "SmartChatBot API request timed out.");
+
+                return null;
+            }
+        }
+        public async Task<ChatApiResponse<PagingResponse<ConversationResponse>>?> CustomerGetChatHistoryAsync(CustomerGetChatHistoryClientRequest request, CancellationToken cancellationToken = default)
+        {
+
+            var url = Endpoint + $"?externalCustomerId={request.ExternalCustomerId}&pageIndex={request.PageIndex}&pageSize={request.PageSize}";
+            try
+            {
+                using var response = await _httpClient.GetAsync(url, cancellationToken);
+
+                var content = await response.Content.ReadAsStringAsync(
+                    cancellationToken);
+
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    _logger.LogWarning(
+                        "SmartChatBot returned empty response. Status: {StatusCode}",
+                        response.StatusCode);
+
+                    return null;
+                }
+
+
+                return JsonSerializer.Deserialize<
+                    ChatApiResponse<PagingResponse<ConversationResponse>>>(
+                    content,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+            }
+            catch (JsonException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Cannot deserialize conversation response");
+
+                return null;
+            }
+        }
+
+
+
+
+        public async Task<ChatApiResponse<PagingResponse<ConversationMessageResponse>>?> GetCursorChatHistoryAsync(GetChatHistoryClientRequest request, CancellationToken cancellationToken = default)
+        {
+            var url = Endpoint + $"/{request.ExternalCustomerId}/messages?limit={request.Limit}";
+            try
+            {
+
+                using var response = await _httpClient.GetAsync(url, cancellationToken);
+
+                var content = await response.Content.ReadAsStringAsync(
+                    cancellationToken);
+
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    _logger.LogWarning(
+                        "SmartChatBot returned empty response. Status: {StatusCode}",
+                        response.StatusCode);
+
+                    return null;
+                }
+
+
+                return JsonSerializer.Deserialize<
+                    ChatApiResponse<PagingResponse<ConversationMessageResponse>>>(
+                    content,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+            }
+            catch (JsonException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Cannot deserialize conversation response");
 
                 return null;
             }
         }
     }
 }
+
+
+
