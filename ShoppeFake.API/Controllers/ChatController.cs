@@ -67,7 +67,7 @@ namespace ShoppeFake.API.Controllers
         }
         [HttpGet("{conversationId}/messages")]
         [SwaggerOperation(summary: "Customer - Get chat messages for a specific conversation")]
-        public async Task<IActionResult> GetCursorChatHistory(string conversationId, string lastCursor, int limit = 20, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetCursorChatHistory(string conversationId, string? lastCursor, int limit = 20, CancellationToken cancellationToken = default)
         {
             var result = await _chatApiService.GetCursorChatHistoryAsync(conversationId, lastCursor, limit, cancellationToken);
             if (result == null)
