@@ -20,7 +20,7 @@ namespace ShoppeFake.API.Controllers
             _chatApiService = chatApiService;
         }
 
-        [HttpPost("nessages")]
+        [HttpPost("messages")]
         [SwaggerOperation(summary: "Customer - Send a chat message", description: "Sends a chat message as the logged-in customer.")]
         public async Task<IActionResult> SendV1Message([FromBody] SendRequest request, CancellationToken cancellationToken)
         {
