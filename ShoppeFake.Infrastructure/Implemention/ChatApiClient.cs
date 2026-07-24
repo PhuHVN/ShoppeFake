@@ -151,7 +151,15 @@ namespace ShoppeFake.Infrastructure.Implemention
 
         public async Task<ChatApiResponse<PagingResponse<ConversationMessageResponse>>?> GetCursorChatHistoryAsync(GetChatHistoryClientRequest request, CancellationToken cancellationToken = default)
         {
-            var url = Endpoint + $"/{request.ExternalCustomerId}/messages?limit={request.Limit}";
+            var url = string.Empty; 
+            if (!string.IsNullOrEmpty(request.LastCursor))
+            {
+                url = Endpoint + $"/{request.ConversationId}/messages?externalCustomerId={request.ExternalCustomerId}&lastCursor={request.LastCursor}&limit={request.Limit}";
+            }
+            else
+            {
+                url = Endpoint + $"/{request.ConversationId}/messages?externalCustomerId={request.ExternalCustomerId}&limit={request.Limit}";
+            }
             try
             {
 
