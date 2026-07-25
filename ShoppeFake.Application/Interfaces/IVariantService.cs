@@ -10,7 +10,7 @@ namespace ShoppeFake.Application.Interfaces
         Task<Result<VariantResponse>> GetVariantByIdAsync(int id);
         Task<Result<BasePaginatedList<VariantResponse>>> GetAllVariantsAsync(int pageIndex, int pageSize);
         Task<Result<VariantResponse>> CreateVariantAsync(IList<int> valueIds, VariantRequest request);
-        Task<Result<VariantResponse>> UpdateVariantAsync(int id, VariantRequest request);
+        Task<Result<VariantResponse>> UpdateVariantAsync(int id, VariantUpdateRequest request);
         Task<IList<ProductVariantExportDto>> GetAllToExportAsync();
         Task<Result> DeleteVariantAsync(int id);
     }
