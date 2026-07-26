@@ -70,7 +70,7 @@ namespace ShoppeFake.Infrastructure.Implemention
         }
         public async Task<ChatApiResponse?> SendMessageV2Async(string? conversationId, SendChatMessageClientRequest request, CancellationToken cancellationToken = default)
         {
-            var url = Endpoint + $"/{conversationId}/message";
+            var url = Endpoint + $"/{conversationId}/messages";
             try
             {
                 using var response = await _httpClient.PostAsJsonAsync(url, request, cancellationToken);
