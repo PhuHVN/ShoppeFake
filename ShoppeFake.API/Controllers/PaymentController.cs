@@ -27,7 +27,7 @@ namespace ShoppeFake.API.Controllers
             return Ok(ApiResponse<PaymentLinkResponse>.OkResponse(result.Value, "Payment link created successfully", "200"));
         }
         [HttpPost("callback")]
-        public async Task<IActionResult> HandlePaymentCallback([FromBody] PayOsWebhookRequest request)
+        public async Task<IActionResult> HandlePaymentCallback([FromBody] PayOSWebhookRequest request)
         {
             var result = await _paymentService.HandlePayOsWebhookAsync(request);
             if (!result.IsSuccess)
