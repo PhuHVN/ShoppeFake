@@ -30,11 +30,11 @@ namespace ShoppeFake.API.Controllers
         public async Task<IActionResult> HandlePaymentCallback([FromBody] PayOSWebhookRequest request)
         {
             var result = await _paymentService.HandlePayOsWebhookAsync(request);
-            if (!result.IsSuccess)
+            if (!result)
             {
-                return BadRequest($"Error handling payment callback : {result.Error.Message}");
+                return BadRequest($"Error handling payment callback : {result}");
             }
-            return Ok(result);
+            return Ok("Callback handled successfully");
         }
 
 
