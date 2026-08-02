@@ -149,6 +149,12 @@ namespace ShoppeFake.Infrastructure.Implemention
 
         public async Task<Result> HandlePayOsWebhookAsync(PayOSWebhookRequest request)
         {
+            if (request.Data == null || string.IsNullOrWhiteSpace(request.Signature))
+            {
+                _logger.LogWarning("PayOS webhook rejected because required payload fields are missing.");
+                return Result.Fail(new Error("PAYOS_WEBHOOK_INVALID", "Invalid PayOS webhook."));
+            }
+
             var payOsClient = CreatePayOsClient();
             if (payOsClient == null)
             {
@@ -162,7 +168,16 @@ namespace ShoppeFake.Infrastructure.Implemention
             }
             catch (PayOSException ex)
             {
-                _logger.LogWarning(ex, "PayOS webhook verification failed for order code {OrderCode}", request.Data.OrderCode);
+                _logger.LogWarning(
+                    ex,
+                    "PayOS webhook verification failed. ErrorType: {ErrorType}. OrderCode: {OrderCode}. WebhookCode: {WebhookCode}. DataCode: {DataCode}. Amount: {Amount}. Reference: {Reference}. PaymentLinkId: {PaymentLinkId}",
+                    ex.GetType().Name,
+                    request.Data.OrderCode,
+                    request.Code,
+                    request.Data.Code,
+                    request.Data.Amount,
+                    request.Data.Reference,
+                    request.Data.PaymentLinkId);
                 return Result.Fail(new Error("PAYOS_WEBHOOK_INVALID", "Invalid PayOS webhook."));
             }
 
@@ -315,28 +330,28 @@ namespace ShoppeFake.Infrastructure.Implemention
         {
             return new Webhook
             {
-                Code = request.Code,
-                Description = request.Desc,
+                Code = request.Code!,
+                Description = request.Desc!,
                 Success = request.Success,
-                Signature = request.Signature,
+                Signature = request.Signature!,
                 Data = new WebhookData
                 {
                     OrderCode = request.Data.OrderCode,
                     Amount = request.Data.Amount,
-                    Description = request.Data.Description,
-                    AccountNumber = request.Data.AccountNumber,
-                    Reference = request.Data.Reference,
-                    TransactionDateTime = request.Data.TransactionDateTime,
-                    Currency = request.Data.Currency,
-                    PaymentLinkId = request.Data.PaymentLinkId,
-                    Code = request.Data.Code,
-                    Description2 = request.Data.Desc,
-                    CounterAccountBankId = request.Data.CounterAccountBankId,
-                    CounterAccountBankName = request.Data.CounterAccountBankName,
-                    CounterAccountName = request.Data.CounterAccountName,
-                    CounterAccountNumber = request.Data.CounterAccountNumber,
-                    VirtualAccountName = request.Data.VirtualAccountName,
-                    VirtualAccountNumber = request.Data.VirtualAccountNumber,
+                    Description = request.Data.Description!,
+                    AccountNumber = request.Data.AccountNumber!,
+                    Reference = request.Data.Reference!,
+                    TransactionDateTime = request.Data.TransactionDateTime!,
+                    Currency = request.Data.Currency!,
+                    PaymentLinkId = request.Data.PaymentLinkId!,
+                    Code = request.Data.Code!,
+                    Description2 = request.Data.Desc!,
+                    CounterAccountBankId = request.Data.CounterAccountBankId!,
+                    CounterAccountBankName = request.Data.CounterAccountBankName!,
+                    CounterAccountName = request.Data.CounterAccountName!,
+                    CounterAccountNumber = request.Data.CounterAccountNumber!,
+                    VirtualAccountName = request.Data.VirtualAccountName!,
+                    VirtualAccountNumber = request.Data.VirtualAccountNumber!,
                 },
             };
         }
