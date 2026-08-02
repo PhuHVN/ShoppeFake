@@ -16,6 +16,8 @@ using StackExchange.Redis;
 using System.Security.Claims;
 using System.Text.Json;
 
+DotNetEnv.Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
 //
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -117,6 +119,8 @@ builder.Services.AddAuthentication(options =>
 
         OnAuthenticationFailed = async context =>
         {
+            context.NoResult();
+
             if (context.Response.HasStarted)
                 return;
 

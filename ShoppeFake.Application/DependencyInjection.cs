@@ -20,6 +20,7 @@ namespace ShoppeFake.Application
             services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<ICartItemService, CartItemService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IOrderService, OrderService>();
         }
 
 
