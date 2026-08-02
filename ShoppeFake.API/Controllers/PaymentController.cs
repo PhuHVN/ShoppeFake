@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.PaymentDtos;
 using ShoppeFake.Application.Interfaces;
+using ShoppeFake.Domain.Common.Results;
 
 namespace ShoppeFake.API.Controllers
 {
@@ -24,8 +26,19 @@ namespace ShoppeFake.API.Controllers
             {
                 return BadRequest($"Error creating payment link : {result.Error.Message}");
             }
+            return Ok(ApiResponse<PaymentLinkResponse>.OkResponse(result.Value, "Payment link created successfully", "200"));
+        }
+        [HttpPost("callback")]
+        public async Task<IActionResult> HandlePaymentCallback([FromBody] PayOsWebhookRequest request)
+        {
+            var result = await _paymentService.HandlePayOsWebhookAsync(request);
+            if (!result.IsSuccess)
+            {
+                return BadRequest($"Error handling payment callback : {result.Error.Message}");
+            }
             return Ok(result);
         }
+        
 
     }
 }
