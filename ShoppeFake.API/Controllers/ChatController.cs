@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Asn1.Ocsp;
-using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.ChatApiDtos;
 using ShoppeFake.Application.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
@@ -37,7 +35,7 @@ namespace ShoppeFake.API.Controllers
         }
         [HttpPost("{conversationId}/messages")]
         [SwaggerOperation(summary: "Customer - Send a chat message with conversationId", description: "Sends a chat message as the logged-in customer.")]
-        public async Task<IActionResult> SendvV2Message(string conversationId,[FromBody] SendRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> SendvV2Message(string conversationId, [FromBody] SendRequest request, CancellationToken cancellationToken)
         {
             var result = await _chatApiService.SendV2Async(conversationId, request.Message, cancellationToken);
             if (result == null)
@@ -54,7 +52,7 @@ namespace ShoppeFake.API.Controllers
         [SwaggerOperation(summary: "Customer - Get a history chat ")]
         public async Task<IActionResult> GetHistoryChat(int pageIndex = 1, int pageSize = 10, CancellationToken cancellationToken = default)
         {
-            var result = await _chatApiService.CustomerGetChatHistoryAsync(pageIndex,pageSize, cancellationToken);
+            var result = await _chatApiService.CustomerGetChatHistoryAsync(pageIndex, pageSize, cancellationToken);
             if (result == null)
             {
                 return BadRequest("Failed to send message.");

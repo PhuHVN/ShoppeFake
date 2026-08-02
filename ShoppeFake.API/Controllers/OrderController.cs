@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.OrderItemDtos;
 using ShoppeFake.Application.Interfaces;
@@ -26,7 +25,7 @@ namespace ShoppeFake.API.Controllers
             {
                 return NotFound();
             }
-            return Ok(ApiResponse<GetOrderReponse>.OkResponse(order.Value,"Order found","200"));
+            return Ok(ApiResponse<GetOrderReponse>.OkResponse(order.Value, "Order found", "200"));
         }
 
         [HttpGet]

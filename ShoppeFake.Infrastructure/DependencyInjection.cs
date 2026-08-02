@@ -23,7 +23,7 @@ namespace ShoppeFake.Infrastructure
             services.AddScoped<IChatApiService, ChatApiService>();
             services.AddScoped<IPaymentService, PaymentService>();
             services.AddScoped<InitData>();
-            
+
         }
 
     }

@@ -52,7 +52,7 @@ namespace ShoppeFake.Application.DTOs
                 .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.ProductVariant.Price));
             CreateMap<Order, GetOrderReponse>()
                 .ForMember(dest => dest.OrderItems, opt => opt.MapFrom(src => src.OrderItems));
-           
+
             CreateMap<OrderItem, OrderItemDto>()
                 .ForMember(dest => dest.ProductVariantName, opt => opt.MapFrom(src => src.ProductVariant.VariantName));
         }

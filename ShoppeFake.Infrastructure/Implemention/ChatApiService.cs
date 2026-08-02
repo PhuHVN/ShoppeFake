@@ -1,11 +1,5 @@
 ﻿using ShoppeFake.Application.DTOs.ChatApiDtos;
 using ShoppeFake.Application.Interfaces;
-using ShoppeFake.Domain.Common.Results;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShoppeFake.Infrastructure.Implemention
 {

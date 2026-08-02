@@ -3,9 +3,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PayOS;
 using PayOS.Exceptions;
-using PayOS.Models.V2.PaymentRequests;
+
 using PayOS.Models.Webhooks;
-using ShoppeFake.Application.DTOs.OrderItemDtos;
 using ShoppeFake.Application.DTOs.PaymentDtos;
 using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Abstractions;
@@ -108,11 +107,11 @@ namespace ShoppeFake.Infrastructure.Implemention
                 }).ToList()
             };
 
-            
+
 
             try
             {
-                var paymentRequest = new CreatePaymentLinkRequest
+                var paymentRequest = new PayOS.Models.V2.PaymentRequests.CreatePaymentLinkRequest
                 {
                     OrderCode = orderCode,
                     Amount = decimal.ToInt32(decimal.Floor(order.TotalAmount)),
@@ -148,7 +147,7 @@ namespace ShoppeFake.Infrastructure.Implemention
             }
         }
 
-        public async Task<Result> HandlePayOsWebhookAsync(PayOsWebhookRequest request)
+        public async Task<Result> HandlePayOsWebhookAsync(PayOSWebhookRequest request)
         {
             var payOsClient = CreatePayOsClient();
             if (payOsClient == null)
@@ -312,7 +311,7 @@ namespace ShoppeFake.Infrastructure.Implemention
             return checked(timestamp * 1000 + randomPart);
         }
 
-        private static Webhook ToPayOsWebhook(PayOsWebhookRequest request)
+        private static Webhook ToPayOsWebhook(PayOSWebhookRequest request)
         {
             return new Webhook
             {

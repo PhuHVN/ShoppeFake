@@ -1,17 +1,8 @@
-﻿using DocumentFormat.OpenXml.Math;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ShoppeFake.Application.DTOs.ChatApiDtos;
 using ShoppeFake.Application.Interfaces;
-using ShoppeFake.Domain.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace ShoppeFake.Infrastructure.Implemention
 {
@@ -151,7 +142,7 @@ namespace ShoppeFake.Infrastructure.Implemention
 
         public async Task<ChatApiResponse<PagingResponse<ConversationMessageResponse>>?> GetCursorChatHistoryAsync(GetChatHistoryClientRequest request, CancellationToken cancellationToken = default)
         {
-            var url = string.Empty; 
+            var url = string.Empty;
             if (!string.IsNullOrEmpty(request.LastCursor))
             {
                 url = Endpoint + $"/{request.ConversationId}/messages?externalCustomerId={request.ExternalCustomerId}&lastCursor={request.LastCursor}&limit={request.Limit}";
