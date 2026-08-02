@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.PaymentDtos;
 using ShoppeFake.Application.Interfaces;
-using ShoppeFake.Domain.Common.Results;
 
 namespace ShoppeFake.API.Controllers
 {
@@ -38,7 +36,7 @@ namespace ShoppeFake.API.Controllers
             }
             return Ok(result);
         }
-        
+
 
     }
 }

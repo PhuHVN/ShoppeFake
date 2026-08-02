@@ -1,9 +1,4 @@
 ﻿using ShoppeFake.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShoppeFake.Domain.Entities
 {
@@ -14,7 +9,7 @@ namespace ShoppeFake.Domain.Entities
         public int OrderId { get; set; }
         public decimal Amount { get; set; }
         public string Currency { get; set; } = "VND";
-      
+
         public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
 
         public string? Provider { get; set; }              // PayOS, VNPay, MoMo, COD

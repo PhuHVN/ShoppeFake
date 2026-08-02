@@ -36,8 +36,9 @@ namespace ShoppeFake.Application.Services
         public async Task<Result<BasePaginatedList<GetOrderReponse>>> GetOrdersAsync(int pageNumber, int pageSize)
         {
             var user = await _userService.GetUserLoginsAsync();
-            if(user == null || user.Value == null) {
-                return Result<BasePaginatedList<GetOrderReponse>>.Fail("404","User not found");
+            if (user == null || user.Value == null)
+            {
+                return Result<BasePaginatedList<GetOrderReponse>>.Fail("404", "User not found");
             }
             var query = _unitOfWork.GetRepository<Order>()
                 .Entity
