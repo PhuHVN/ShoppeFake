@@ -21,6 +21,7 @@ namespace ShoppeFake.Infrastructure
             services.AddScoped<IExcelService, ExcelService>();
             services.AddScoped<IChatApiClient, ChatApiClient>();
             services.AddScoped<IChatApiService, ChatApiService>();
+            services.AddScoped<IPaymentService, PaymentService>();
             services.AddScoped<InitData>();
             
         }
