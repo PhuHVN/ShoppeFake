@@ -18,6 +18,9 @@ namespace ShoppeFake.Infrastructure.DatabaseSettings
         public DbSet<AttributeValue> AttributeValues { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Feedback> Feedbacks { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,6 +39,33 @@ namespace ShoppeFake.Infrastructure.DatabaseSettings
             modelBuilder.Entity<VariantAttributeValue>()
                 .HasIndex(v => new { v.AttributeId, v.ProductVariantId })
                 .IsUnique();
+
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Account)
+                .WithMany()
+                .HasForeignKey(o => o.AccountId);
+
+            modelBuilder.Entity<Order>()
+                .Property(o => o.TotalAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.Order)
+                .WithMany(o => o.OrderItems)
+                .HasForeignKey(oi => oi.OrderId);
+
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.ProductVariant)
+                .WithMany()
+                .HasForeignKey(oi => oi.ProductVariantId);
+
+            modelBuilder.Entity<OrderItem>()
+                .Property(oi => oi.UnitPrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.Amount)
+                .HasPrecision(18, 2);
         }
     }
 }
