@@ -33,4 +33,13 @@
         Paid = 1,
         Failed = 2
     }
+    public enum WebhookProcessStatus
+    {
+        Success,
+        Ignore,
+        Retry,
+        InvalidSignature,
+        OutOfStock,
+        AmountMismatch
+    }
 }

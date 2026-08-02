@@ -147,106 +147,162 @@ namespace ShoppeFake.Infrastructure.Implemention
             }
         }
 
-        public async Task<Result> HandlePayOsWebhookAsync(PayOSWebhookRequest request)
+        public async Task<bool> HandlePayOsWebhookAsync(PayOSWebhookRequest request)
         {
+            // Validate request signature
             if (request.Data == null || string.IsNullOrWhiteSpace(request.Signature))
             {
                 _logger.LogWarning("PayOS webhook rejected because required payload fields are missing.");
-                return Result.Fail(new Error("PAYOS_WEBHOOK_INVALID", "Invalid PayOS webhook."));
+                return true; // Business logic error: invalid signature
             }
 
+            // Get PayOS client
             var payOsClient = CreatePayOsClient();
             if (payOsClient == null)
             {
-                return Result.Fail(new Error("PAYOS_CONFIG_MISSING", "PayOS configuration is missing."));
+                _logger.LogError("PayOS client is not configured. Cannot process webhook.");
+                return false; // System error: service dependency unavailable
             }
 
+            // Verify webhook signature
             WebhookData webhookData;
             try
             {
                 webhookData = await payOsClient.Webhooks.VerifyAsync(ToPayOsWebhook(request));
+                _logger.LogInformation("PayOS webhook verified successfully");
             }
             catch (PayOSException ex)
             {
-                _logger.LogWarning(
-                    ex,
-                    "PayOS webhook verification failed. ErrorType: {ErrorType}. OrderCode: {OrderCode}. WebhookCode: {WebhookCode}. DataCode: {DataCode}. Amount: {Amount}. Reference: {Reference}. PaymentLinkId: {PaymentLinkId}",
-                    ex.GetType().Name,
-                    request.Data.OrderCode,
-                    request.Code,
-                    request.Data.Code,
-                    request.Data.Amount,
-                    request.Data.Reference,
-                    request.Data.PaymentLinkId);
-                return Result.Fail(new Error("PAYOS_WEBHOOK_INVALID", "Invalid PayOS webhook."));
+                _logger.LogWarning(ex, "PayOS webhook verification failed.");
+                return true; // Business logic error: invalid signature
             }
 
             var orderCode = webhookData.OrderCode.ToString();
-            var order = await _unitOfWork.GetRepository<Order>()
-                .Entity
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.ProductVariant)
-                .FirstOrDefaultAsync(o => o.PaymentCode == orderCode);
 
-            if (order == null)
-            {
-                return Result.Fail(Error.NotFound);
-            }
-
-            if (order.PaymentStatus == PaymentStatus.Paid)
-            {
-                return Result.Success();
-            }
-
-            if (webhookData.Code != "00")
-            {
-                order.PaymentStatus = PaymentStatus.Failed;
-                await _unitOfWork.SaveChangesAsync();
-                return Result.Success();
-            }
-
-            if (order.TotalAmount != webhookData.Amount)
-            {
-                return Result.Fail(new Error("PAYMENT_AMOUNT_MISMATCH", "Payment amount does not match order amount."));
-            }
-
-            await _unitOfWork.BeginTransactionAsync();
+            // Get order from database
+            var order = null as Order;
             try
             {
-                foreach (var item in order.OrderItems)
-                {
-                    if (item.ProductVariant.StockQuantity < item.Quantity)
-                    {
-                        await _unitOfWork.RollBackAsync();
-                        return Result.Fail(new Error("OUT_OF_STOCK", $"{item.ProductVariant.VariantName} does not have enough stock."));
-                    }
-
-                    item.ProductVariant.StockQuantity -= item.Quantity;
-                    item.ProductVariant.UpdatedAt = DateTime.UtcNow;
-                }
-
-                order.PaymentStatus = PaymentStatus.Paid;
-                order.Status = OrderStatus.Confirmed;
-
-                var cart = await _unitOfWork.GetRepository<Cart>()
+                     order = await _unitOfWork.GetRepository<Order>()
                     .Entity
-                    .Include(c => c.CartItems)
-                    .FirstOrDefaultAsync(c => c.AccountId == order.AccountId);
-
-                if (cart != null && cart.CartItems.Any())
-                {
-                    await _unitOfWork.GetRepository<CartItem>().DeleteRangeAsync(cart.CartItems);
-                }
-
-                await _unitOfWork.CommitTransactionAsync();
-                return Result.Success();
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                    .FirstOrDefaultAsync(o => o.PaymentCode == orderCode);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error when retrieving order. PaymentCode={PaymentCode}", orderCode);
+                return false; // Database error
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Could not complete paid order {OrderId}", order.Id);
-                await _unitOfWork.RollBackAsync();
-                return Result.Fail(new Error("PAYMENT_CONFIRM_FAILED", "Could not confirm payment."));
+                _logger.LogError(ex, "Unexpected error when retrieving order. PaymentCode={PaymentCode}", orderCode);
+                return false; // System error
             }
+
+            // Order not found - business logic issue
+            if (order == null)
+            {
+                _logger.LogWarning("Order not found. PaymentCode={PaymentCode}", orderCode);
+                return true; // Business logic error: order doesn't exist
+            }
+
+            // Payment already processed
+            if (order.PaymentStatus == PaymentStatus.Paid)
+            {
+                _logger.LogWarning("Paid order received again. PaymentCode={PaymentCode}", orderCode);
+                return true; // Business logic: already processed
+            }
+
+            // Check payment code from PayOS
+            if (webhookData.Code != "00")
+            {
+                _logger.LogWarning("Payment failed. PaymentCode={PaymentCode}, Code={Code}", orderCode, webhookData.Code);
+                try
+                {
+                    order.PaymentStatus = PaymentStatus.Failed;
+                    await _unitOfWork.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex)
+                {
+                    _logger.LogError(ex, "Database error when updating failed order. PaymentCode={PaymentCode}", orderCode);
+                    await _unitOfWork.RollBackAsync();
+                    return false; // Database error: transaction commit failed
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error when updating failed order. PaymentCode={PaymentCode}", orderCode);
+                    await _unitOfWork.RollBackAsync();
+                    return false; // System error
+                }
+                return true; // Business logic: payment failed
+            }
+
+            // Check amount mismatch
+            if (order.TotalAmount != webhookData.Amount)
+            {
+                _logger.LogWarning("Amount mismatch. PaymentCode={PaymentCode}, Expected={Expected}, Actual={Actual}", 
+                    orderCode, order.TotalAmount, webhookData.Amount);
+                return true; // Business logic error: amount mismatch
+            }
+
+            // Process successful payment
+            try
+            {
+                var processStatus = await ProcessPaidOrderAsync(order, webhookData);
+                if (processStatus == WebhookProcessStatus.Success)
+                {
+                    return true; // Successfully processed
+                }
+                else
+                {
+                    // Business logic issues (out of stock, etc.)
+                    return true;
+                }
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error when processing paid order. OrderId={OrderId}", order.Id);
+                await _unitOfWork.RollBackAsync();
+                return false; // Database error: transaction commit failed
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error when processing paid order. OrderId={OrderId}", order.Id);
+                await _unitOfWork.RollBackAsync();
+                return false; // System error
+            }
+        }
+        private async Task<WebhookProcessStatus> ProcessPaidOrderAsync(Order order, WebhookData webhookData)
+        {
+            if (order.PaymentStatus == PaymentStatus.Paid)
+            {
+                _logger.LogWarning("Paid order received. PaymentCode={PaymentCode}", order.PaymentCode);
+                return WebhookProcessStatus.Ignore;
+            }
+            if (order.TotalAmount != webhookData.Amount)
+            {
+                _logger.LogWarning("Amount mismatch. PaymentCode={PaymentCode}", order.PaymentCode);
+                return WebhookProcessStatus.AmountMismatch;
+            }
+            foreach (var item in order.OrderItems)
+            {
+                if (item.ProductVariant.StockQuantity < item.Quantity)
+                {
+                    _logger.LogWarning("Out of stock for product variant {ProductVariantId}. PaymentCode={PaymentCode}", item.ProductVariantId, order.PaymentCode);
+                    return WebhookProcessStatus.OutOfStock;
+                }
+            }
+            foreach (var item in order.OrderItems)
+            {
+                item.ProductVariant.StockQuantity -= item.Quantity;
+                await _unitOfWork.GetRepository<ProductVariant>().UpdateAsync(item.ProductVariant);
+            }
+            order.PaymentStatus = PaymentStatus.Paid;
+            order.Status = OrderStatus.Confirmed;
+            await _unitOfWork.GetRepository<Order>().UpdateAsync(order);
+            await _unitOfWork.SaveChangesAsync();
+            return WebhookProcessStatus.Success;
         }
 
         public async Task<Result> CancelPaymentAsync(long orderCode)
