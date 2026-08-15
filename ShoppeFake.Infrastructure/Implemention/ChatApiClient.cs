@@ -189,7 +189,7 @@ namespace ShoppeFake.Infrastructure.Implemention
 
         public async Task<bool> OrderEventAsync(OrderEventClientRequest request,CancellationToken cancellationToken = default)
         {
-            var url = Endpoint + $"{request.ConversationId}/orders";
+            var url = Endpoint + $"/{request.ConversationId}/orders";
             try
             {
                 using var response = await _httpClient.PostAsJsonAsync(
