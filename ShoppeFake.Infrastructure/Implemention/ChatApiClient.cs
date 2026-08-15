@@ -186,6 +186,85 @@ namespace ShoppeFake.Infrastructure.Implemention
                 return null;
             }
         }
+
+        public async Task<ChatApiResponse?> OrderEventAsync(OrderEventClientRequest request, CancellationToken cancellationToken = default)
+        {
+            var url = Endpoint+ $"{request.ConversationId}/orders";
+            try
+            {
+                using var response = await _httpClient.PostAsJsonAsync(url, request, cancellationToken);
+
+                var result = await response.Content.ReadFromJsonAsync<ChatApiResponse>(cancellationToken: cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning(
+                        "SmartChatBot API returned {StatusCode}. Message: {Message}",
+                        response.StatusCode,
+                        result?.Message);
+
+                    return result;
+                }
+
+                return result;
+            }
+            catch (HttpRequestException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Cannot connect to SmartChatBot API.");
+
+                return null;
+            }
+            catch (TaskCanceledException exception)
+                when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogError(
+                    exception,
+                    "SmartChatBot API request timed out.");
+
+                return null;
+            }
+        }
+        public async Task<ChatApiResponse?> UpdateStatusEvent(string orderId,string status, CancellationToken cancellationToken = default)
+        {
+            var url = Endpoint + $"/orders/{orderId}/status";
+            try
+            {
+                using var response = await _httpClient.PatchAsJsonAsync(url, new { status }, cancellationToken);
+
+                var result = await response.Content.ReadFromJsonAsync<ChatApiResponse>(cancellationToken: cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning(
+                        "SmartChatBot API returned {StatusCode}. Message: {Message}",
+                        response.StatusCode,
+                        result?.Message);
+
+                    return result;
+                }
+
+                return result;
+            }
+            catch (HttpRequestException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Cannot connect to SmartChatBot API.");
+
+                return null;
+            }
+            catch (TaskCanceledException exception)
+                when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogError(
+                    exception,
+                    "SmartChatBot API request timed out.");
+
+                return null;
+            }
+        }
     }
 }
 

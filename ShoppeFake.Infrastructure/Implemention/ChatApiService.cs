@@ -87,5 +87,25 @@ namespace ShoppeFake.Infrastructure.Implemention
                 cancellationToken);
             return chatResponse;
         }
+        public async Task<ChatApiResponse?> OrderEventAsync(string conversationId, OrdersRequest request, CancellationToken cancellationToken = default)
+        {
+            
+            var chatResponse = await _chatApiClient.OrderEventAsync(
+                new OrderEventClientRequest
+                {
+                    ConversationId = conversationId,
+                    ExternalOrderId = request.ExternalOrderId.ToString(),
+                    Amount = request.Amount,
+                    Products = request.Products
+                },
+                cancellationToken);
+            return chatResponse;
+        }
+
+        public async Task<ChatApiResponse?> UpdateStatusEventAsync(string orderId, string status, CancellationToken cancellationToken = default)
+        {
+            var chatResponse = await _chatApiClient.UpdateStatusEvent(orderId, status, cancellationToken);
+            return chatResponse;
+        }
     }
 }
