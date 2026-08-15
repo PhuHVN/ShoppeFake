@@ -473,11 +473,9 @@ namespace ShoppeFake.Infrastructure.Implemention
         private static long GenerateOrderCode()
         {
             var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            var randomPart = Random.Shared.NextInt64(1000, 999999); // Bigger range to prevent collision
+            var randomPart = Random.Shared.Next(100, 999);
 
-            // Use separate spaces: timestamp * 1M + randomPart
-            // This prevents overlap and collision between orders created at same millisecond
-            return timestamp * 1000000 + randomPart;
+            return checked(timestamp * 1000 + randomPart);
         }
 
         private static Webhook ToPayOsWebhook(PayOSWebhookRequest request)
