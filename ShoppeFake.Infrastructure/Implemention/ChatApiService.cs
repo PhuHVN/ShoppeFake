@@ -87,7 +87,7 @@ namespace ShoppeFake.Infrastructure.Implemention
                 cancellationToken);
             return chatResponse;
         }
-        public async Task<ChatApiResponse?> OrderEventAsync(string conversationId, OrdersRequest request, CancellationToken cancellationToken = default)
+        public async Task<bool> OrderEventAsync(string conversationId, OrdersRequest request, CancellationToken cancellationToken = default)
         {
             
             var chatResponse = await _chatApiClient.OrderEventAsync(
@@ -102,7 +102,7 @@ namespace ShoppeFake.Infrastructure.Implemention
             return chatResponse;
         }
 
-        public async Task<ChatApiResponse?> UpdateStatusEventAsync(string orderId, string status, CancellationToken cancellationToken = default)
+        public async Task<bool> UpdateStatusEventAsync(string orderId, string status, CancellationToken cancellationToken = default)
         {
             var chatResponse = await _chatApiClient.UpdateStatusEvent(orderId, status, cancellationToken);
             return chatResponse;
