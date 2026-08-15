@@ -28,5 +28,7 @@ namespace ShoppeFake.Application.DTOs.OrderItemDtos
         public string ProductVariantName { get; set; } = string.Empty;
         public decimal UnitPrice { get; set; }
         public int Quantity { get; set; }
+        public AddToCartSource AddToCartSource { get; set; } = AddToCartSource.Product;
+        public string? ConversationId { get; set; } 
     }
 }
