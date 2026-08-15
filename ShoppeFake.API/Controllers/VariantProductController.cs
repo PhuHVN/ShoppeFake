@@ -35,9 +35,9 @@ namespace ShoppeFake.API.Controllers
 
         [HttpGet]
         [SwaggerOperation(summary: "Public - Get all product variants", description: "Retrieves a paginated list of all product variants.")]
-        public async Task<IActionResult> GetAll(int pageIndex = 1, int pageSize = 10)
+        public async Task<IActionResult> GetAll(int pageIndex = 1, int pageSize = 10 , string? orderBy = null)
         {
-            var result = await _variantProductService.GetAllVariantsAsync(pageIndex, pageSize);
+            var result = await _variantProductService.GetAllVariantsAsync(pageIndex, pageSize, orderBy);
             if (result.IsSuccess)
             {
                 return Ok(ApiResponse<BasePaginatedList<VariantResponse>>.OkResponse(result.Value, "Get All Variants", "200"));

@@ -8,5 +8,7 @@ namespace ShoppeFake.Application.Interfaces
         Task<ChatApiResponse?> SendV2Async(string conversationId, string message, CancellationToken cancellationToken = default);
         Task<ChatApiResponse<PagingResponse<ConversationResponse>>?> CustomerGetChatHistoryAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default);
         Task<ChatApiResponse<PagingResponse<ConversationMessageResponse>>?> GetCursorChatHistoryAsync(string conversationId, string? lastCursor, int limit, CancellationToken cancellationToken = default);
+        Task<ChatApiResponse?> OrderEventAsync(string conversationId, OrdersRequest request, CancellationToken cancellationToken = default);
+        Task<ChatApiResponse?> UpdateStatusEventAsync( string orderId, string status, CancellationToken cancellationToken = default);
     }
 }

@@ -105,18 +105,36 @@ namespace ShoppeFake.Application.Services
             return Result.Success();
         }
 
-        public async Task<Result<BasePaginatedList<VariantResponse>>> GetAllVariantsAsync(int pageIndex, int pageSize)
+        public async Task<Result<BasePaginatedList<VariantResponse>>> GetAllVariantsAsync(int pageIndex, int pageSize, string? orderBy)
         {
-            var query = _unitOfWork.GetRepository<ProductVariant>().Entity
+            IQueryable<ProductVariant> query = _unitOfWork.GetRepository<ProductVariant>().Entity
                 .AsNoTracking()
                 .Where(x => x.Status == Domain.Enums.StatusEnum.Active)
-                .OrderByDescending(x => x.CreatedAt)
                 .Include(x => x.Product)
                 .Include(x => x.ProductImages)
                 .Include(x => x.VariantAttributeValues)
                     .ThenInclude(x => x.Attribute)
                 .Include(x => x.VariantAttributeValues)
-                    .ThenInclude(x => x.AttributeValue);
+                    .ThenInclude(x => x.AttributeValue); 
+
+            switch (orderBy?.ToLower())
+            {
+                case "price_asc":
+                    query = query.OrderBy(x => x.Price);
+                    break;
+                case "price_desc":
+                    query = query.OrderByDescending(x => x.Price);
+                    break;
+                case "name_asc":
+                    query = query.OrderBy(x => x.VariantName);
+                    break;
+                case "name_desc":
+                    query = query.OrderByDescending(x => x.VariantName);
+                    break;
+                default:
+                    query = query.OrderByDescending(x => x.CreatedAt);
+                    break;
+            }
 
             var result = await _unitOfWork
                 .GetRepository<ProductVariant>()
