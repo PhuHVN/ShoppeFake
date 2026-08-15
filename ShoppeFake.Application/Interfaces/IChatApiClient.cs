@@ -1,4 +1,5 @@
 ﻿using ShoppeFake.Application.DTOs.ChatApiDtos;
+using ShoppeFake.Domain.Enums;
 
 namespace ShoppeFake.Application.Interfaces
 {
@@ -9,6 +10,6 @@ namespace ShoppeFake.Application.Interfaces
         Task<ChatApiResponse<PagingResponse<ConversationMessageResponse>>?> GetCursorChatHistoryAsync(GetChatHistoryClientRequest request, CancellationToken cancellationToken = default);
         Task<ChatApiResponse<PagingResponse<ConversationResponse>>?> CustomerGetChatHistoryAsync(CustomerGetChatHistoryClientRequest request, CancellationToken cancellationToken = default);
         Task<bool> OrderEventAsync(OrderEventClientRequest request, CancellationToken cancellationToken = default);
-        Task<bool> UpdateStatusEvent(string orderId, string status, CancellationToken cancellationToken = default);
+        Task<bool> UpdateStatusEvent(string orderId, EnumStatusClient status, CancellationToken cancellationToken = default);
     }
 }

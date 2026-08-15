@@ -416,7 +416,7 @@ namespace ShoppeFake.Infrastructure.Implemention
             // Notify chat service about the order status update (fire and forget - don't block if it fails)
             try
             {
-                await _chatService.UpdateStatusEventAsync(order.Id.ToString(), order.Status.ToString());
+                await _chatService.UpdateStatusEventAsync (order.Id.ToString(), EnumStatusClient.Success);
             }
             catch (Exception ex)
             {
