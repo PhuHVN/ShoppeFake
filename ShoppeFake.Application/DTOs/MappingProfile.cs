@@ -57,7 +57,9 @@ namespace ShoppeFake.Application.DTOs
                 .ForMember(dest => dest.OrderItems, opt => opt.MapFrom(src => src.OrderItems));
 
             CreateMap<OrderItem, OrderItemDto>()
-                .ForMember(dest => dest.ProductVariantName, opt => opt.MapFrom(src => src.ProductVariant.VariantName));
+                .ForMember(dest => dest.ProductVariantName, opt => opt.MapFrom(src => src.ProductVariant.VariantName))
+                .ForMember(dest => dest.AddToCartSource, opt => opt.MapFrom(src => src.ProductVariant.CartItems.Select(c => c.Source).FirstOrDefault()))
+                .ForMember(dest => dest.ConversationId, opt => opt.MapFrom(src => src.ProductVariant.CartItems.Select(c => c.ConversationId).FirstOrDefault()));
         }
         public class BasePaginatedListConverter<TSource, TDestination> : ITypeConverter<BasePaginatedList<TSource>, BasePaginatedList<TDestination>>
         {
