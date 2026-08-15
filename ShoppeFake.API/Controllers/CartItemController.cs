@@ -4,6 +4,7 @@ using ShoppeFake.Application.DTOs;
 using ShoppeFake.Application.DTOs.CartItemDtos;
 using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Abstractions;
+using ShoppeFake.Domain.Enums;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace ShoppeFake.API.Controllers
@@ -22,8 +23,9 @@ namespace ShoppeFake.API.Controllers
 
         [HttpPost]
         [SwaggerOperation(summary: "Customer - Create a new cart item", description: "Adds a new item to the shopping cart.")]
-        public async Task<IActionResult> CreateCartItem([FromBody] CartItemRequest request)
+        public async Task<IActionResult> CreateCartItem(AddToCartSource addToCartSource, [FromBody] CartItemRequest request)
         {
+            request.Source = addToCartSource;
             var result = await _cartItemService.CreateCartItemAsync(request);
             if (result.IsSuccess)
             {
@@ -56,7 +58,7 @@ namespace ShoppeFake.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [SwaggerOperation(summary: "Customer - Delete own cart item", description: "Removes a specific item from the shopping cart.")]
+        [SwaggerOperation(summary: "Customer - Delete specific item in cart by Id", description: "Removes a specific item from the shopping cart.")]
         public async Task<IActionResult> DeleteCartItem(int id)
         {
             var result = await _cartItemService.DeleteCartItemAsync(id);
@@ -66,5 +68,8 @@ namespace ShoppeFake.API.Controllers
             }
             return BadRequest(result.Error);
         }
+        
     }
 }
+
+
