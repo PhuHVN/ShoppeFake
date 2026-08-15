@@ -128,52 +128,7 @@ namespace ShoppeFake.Infrastructure.Implemention
                 order.PaymentUrl = paymentLink.CheckoutUrl;
                 await _unitOfWork.GetRepository<Order>().AddAsync(order);
                 await _unitOfWork.SaveChangesAsync();
-                //=======================================
-                //get cart items that are from chat source and have conversationId
-                var cartItems = await _unitOfWork.GetRepository<CartItem>()
-                    .FilterByAsync(ci => ci.CartId == cart.Id && ci.Source == AddToCartSource.Chat && !string.IsNullOrEmpty(ci.ConversationId));
-                var conversationGroups = cartItems.GroupBy(x => x.ConversationId);
-                // Callback to chat service if conversationId is provided
-                foreach (var conversationGroup in conversationGroups)
-                {
-                    try
-                    {
-                        var conversationId = conversationGroup.Key;
-
-                        var productVariantIds = conversationGroup
-                            .Select(x => x.ProductVariantId)
-                            .ToHashSet();
-
-                        var orderItems = order.OrderItems
-                            .Where(x => productVariantIds.Contains(x.ProductVariantId))
-                            .ToList();
-
-                        if (!orderItems.Any())
-                            continue;
-
-                        var orderEvents = new OrdersRequest
-                        {
-                            ExternalOrderId = order.Id,
-                            Amount = orderItems.Sum(x => x.UnitPrice * x.Quantity),
-                            Status = order.Status.ToString(),
-                            Products = orderItems.Select(item => new OrderProductItemRequest
-                            {
-                                ExternalProductId = item.ProductVariantId.ToString(),
-                                ProductName = item.ProductVariant?.VariantName ?? string.Empty,
-                                Quantity = item.Quantity,
-                                Price = item.UnitPrice
-                            }).ToList()
-                        };
-
-                        await _chatService.OrderEventAsync(conversationId!, orderEvents);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex,
-                            "Failed to send order event to chat service for conversation {ConversationId}",
-                            conversationGroup.Key);
-                    }
-                }
+                
 
                 return Result<PaymentLinkResponse>.Success(new PaymentLinkResponse
                 {
@@ -380,28 +335,84 @@ namespace ShoppeFake.Infrastructure.Implemention
             }
 
             // Clear cart only after payment is confirmed and stock is reduced successfully
-            try
+            var cart = await _unitOfWork.GetRepository<Cart>()
+                   .FindAsync(c => c.AccountId == order.AccountId);
+            if (cart == null)
             {
-                var cart = await _unitOfWork.GetRepository<Cart>()
-                    .FindAsync(c => c.AccountId == order.AccountId);
+                _logger.LogWarning("Cart not found for account {AccountId}. OrderId={OrderId}", order.AccountId, order.Id);
+                // Continue processing without cart, but skip chat notifications
+            }
+            else
+            {
+                // Get all cart items before clearing
+                var allCartItems = await _unitOfWork.GetRepository<CartItem>()
+                    .FilterByAsync(ci => ci.CartId == cart.Id);
 
-                if (cart != null)
+                // Filter chat items for notification
+                var chatItems = allCartItems
+                    .Where(ci => ci.Source == AddToCartSource.Chat && !string.IsNullOrEmpty(ci.ConversationId))
+                    .ToList();
+
+                // Notify chat service for each conversation
+                var conversationGroups = chatItems.GroupBy(x => x.ConversationId);
+                foreach (var conversationGroup in conversationGroups)
                 {
-                    var cartItems = await _unitOfWork.GetRepository<CartItem>().FilterByAsync(ci => ci.CartId == cart.Id);
-                    foreach (var item in cartItems)
+                    try
+                    {
+                        var conversationId = conversationGroup.Key;
+
+                        var productVariantIds = conversationGroup
+                            .Select(x => x.ProductVariantId)
+                            .ToHashSet();
+
+                        var orderItems = order.OrderItems
+                            .Where(x => productVariantIds.Contains(x.ProductVariantId))
+                            .ToList();
+
+                        if (!orderItems.Any())
+                            continue;
+
+                        var orderEvents = new OrdersRequest
+                        {
+                            ExternalOrderId = order.Id,
+                            Amount = orderItems.Sum(x => x.UnitPrice * x.Quantity),
+                            Status = order.Status.ToString(),
+                            Products = orderItems.Select(item => new OrderProductItemRequest
+                            {
+                                ExternalProductId = item.ProductVariantId.ToString(),
+                                ProductName = item.ProductVariant?.VariantName ?? string.Empty,
+                                Quantity = item.Quantity,
+                                Price = item.UnitPrice
+                            }).ToList()
+                        };
+
+                        await _chatService.OrderEventAsync(conversationId!, orderEvents);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex,
+                            "Failed to send order event to chat service for conversation {ConversationId}",
+                            conversationGroup.Key);
+                    }
+                }
+
+                // Clear all cart items
+                try
+                {
+                    foreach (var item in allCartItems)
                     {
                         await _unitOfWork.GetRepository<CartItem>().DeleteAsync(item.Id);
                     }
                     await _unitOfWork.SaveChangesAsync();
                     _logger.LogInformation("Cart cleared for order {OrderId}", order.Id);
                 }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to clear cart for order {OrderId}. Cart may have duplicate items.", order.Id);
+                    // Don't block order confirmation if cart clear fails
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to clear cart for order {OrderId}. Cart may have duplicate items.", order.Id);
-                // Don't block order confirmation if cart clear fails
-            }
-
+           
             // Notify chat service about the order status update (fire and forget - don't block if it fails)
             try
             {
