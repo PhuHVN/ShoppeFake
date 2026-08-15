@@ -47,4 +47,12 @@
         Product = 1,
         Chat = 2
     }
+    public enum EnumStatusClient
+    {
+        None = 0,
+        Success = 1,
+        Failed = 2,
+        Paid = 3,
+        OrderCreated = 4
+    }
 }

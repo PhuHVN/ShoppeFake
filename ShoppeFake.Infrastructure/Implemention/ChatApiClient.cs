@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using ShoppeFake.Application.DTOs.ChatApiDtos;
 using ShoppeFake.Application.Interfaces;
+using ShoppeFake.Domain.Enums;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -230,7 +231,7 @@ namespace ShoppeFake.Infrastructure.Implemention
                 return false;
             }
         }
-        public async Task<bool> UpdateStatusEvent(string orderId,string status, CancellationToken cancellationToken = default)
+        public async Task<bool> UpdateStatusEvent(string orderId,EnumStatusClient status, CancellationToken cancellationToken = default)
         {
             var url = Endpoint + $"/orders/{orderId}/status";
             try

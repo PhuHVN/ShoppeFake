@@ -1,5 +1,6 @@
 ﻿using ShoppeFake.Application.DTOs.ChatApiDtos;
 using ShoppeFake.Application.Interfaces;
+using ShoppeFake.Domain.Enums;
 
 namespace ShoppeFake.Infrastructure.Implemention
 {
@@ -102,7 +103,7 @@ namespace ShoppeFake.Infrastructure.Implemention
             return chatResponse;
         }
 
-        public async Task<bool> UpdateStatusEventAsync(string orderId, string status, CancellationToken cancellationToken = default)
+        public async Task<bool> UpdateStatusEventAsync(string orderId, EnumStatusClient status, CancellationToken cancellationToken = default)
         {
             var chatResponse = await _chatApiClient.UpdateStatusEvent(orderId, status, cancellationToken);
             return chatResponse;
