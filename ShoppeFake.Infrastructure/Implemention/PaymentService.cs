@@ -5,6 +5,7 @@ using PayOS;
 using PayOS.Exceptions;
 
 using PayOS.Models.Webhooks;
+using ShoppeFake.Application.DTOs.ChatApiDtos;
 using ShoppeFake.Application.DTOs.PaymentDtos;
 using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Abstractions;
@@ -19,18 +20,21 @@ namespace ShoppeFake.Infrastructure.Implemention
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserService _userService;
         private readonly IConfiguration _configuration;
+        private readonly IChatApiService _chatService;
         private readonly ILogger<PaymentService> _logger;
 
         public PaymentService(
             IUnitOfWork unitOfWork,
             IUserService userService,
             IConfiguration configuration,
+            IChatApiService chatService,
             ILogger<PaymentService> logger
             )
         {
             _unitOfWork = unitOfWork;
             _userService = userService;
             _configuration = configuration;
+            _chatService = chatService;
             _logger = logger;
         }
 
@@ -124,6 +128,35 @@ namespace ShoppeFake.Infrastructure.Implemention
                 order.PaymentUrl = paymentLink.CheckoutUrl;
                 await _unitOfWork.GetRepository<Order>().AddAsync(order);
                 await _unitOfWork.SaveChangesAsync();
+                
+                // Callback to chat service if conversationId is provided (fire and forget - don't block if it fails)
+                if (!string.IsNullOrWhiteSpace(request.ConversationId))
+                {
+                    try
+                    {
+                        var orderEvents = new OrdersRequest
+                        {
+                            ExternalOrderId = order.Id,
+                            Amount = order.OrderItems.Sum(x => x.UnitPrice * x.Quantity),
+                            Status = order.Status.ToString(),
+                            Products = order.OrderItems.Select(item => new OrderProductItemRequest
+                            {
+                                ExternalProductId = item.ProductVariantId.ToString(),
+                                ProductName = item.ProductVariant.VariantName,
+                                Quantity = item.Quantity,
+                                Price = item.UnitPrice
+                            }).ToList()
+                        };
+                        // Callback OrderEvent to ChatApi
+                        await _chatService.OrderEventAsync(request.ConversationId, orderEvents);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to send order event to chat service for order {OrderId}. Order created successfully but chat notification failed.", order.Id);
+                        // Don't throw - payment link is already created, chat notification is non-critical
+                    }
+                }
+
                 return Result<PaymentLinkResponse>.Success(new PaymentLinkResponse
                 {
                     OrderId = order.Id,
@@ -183,11 +216,11 @@ namespace ShoppeFake.Infrastructure.Implemention
             var order = null as Order;
             try
             {
-                     order = await _unitOfWork.GetRepository<Order>()
-                    .Entity
-                    .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.ProductVariant)
-                    .FirstOrDefaultAsync(o => o.PaymentCode == orderCode);
+                order = await _unitOfWork.GetRepository<Order>()
+               .Entity
+               .Include(o => o.OrderItems)
+               .ThenInclude(oi => oi.ProductVariant)
+               .FirstOrDefaultAsync(o => o.PaymentCode == orderCode);
             }
             catch (DbUpdateException ex)
             {
@@ -241,8 +274,19 @@ namespace ShoppeFake.Infrastructure.Implemention
             // Check amount mismatch
             if (order.TotalAmount != webhookData.Amount)
             {
-                _logger.LogWarning("Amount mismatch. PaymentCode={PaymentCode}, Expected={Expected}, Actual={Actual}", 
+                _logger.LogWarning("Amount mismatch. PaymentCode={PaymentCode}, Expected={Expected}, Actual={Actual}",
                     orderCode, order.TotalAmount, webhookData.Amount);
+                try
+                {
+                    order.PaymentStatus = PaymentStatus.Failed;
+                    order.Status = OrderStatus.Cancelled;
+                    await _unitOfWork.SaveChangesAsync();
+                    _logger.LogInformation("Order marked as cancelled due to amount mismatch. OrderId={OrderId}", order.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to mark order as cancelled for amount mismatch. OrderId={OrderId}", order.Id);
+                }
                 return true; // Business logic error: amount mismatch
             }
 
@@ -280,11 +324,8 @@ namespace ShoppeFake.Infrastructure.Implemention
                 _logger.LogWarning("Paid order received. PaymentCode={PaymentCode}", order.PaymentCode);
                 return WebhookProcessStatus.Ignore;
             }
-            if (order.TotalAmount != webhookData.Amount)
-            {
-                _logger.LogWarning("Amount mismatch. PaymentCode={PaymentCode}", order.PaymentCode);
-                return WebhookProcessStatus.AmountMismatch;
-            }
+
+            // Validate stock availability for all items
             foreach (var item in order.OrderItems)
             {
                 if (item.ProductVariant.StockQuantity < item.Quantity)
@@ -293,15 +334,66 @@ namespace ShoppeFake.Infrastructure.Implemention
                     return WebhookProcessStatus.OutOfStock;
                 }
             }
-            foreach (var item in order.OrderItems)
+
+            // Reduce stock for all items (atomic transaction)
+            try
             {
-                item.ProductVariant.StockQuantity -= item.Quantity;
-                await _unitOfWork.GetRepository<ProductVariant>().UpdateAsync(item.ProductVariant);
+                foreach (var item in order.OrderItems)
+                {
+                    item.ProductVariant.StockQuantity -= item.Quantity;
+                }
+
+                order.PaymentStatus = PaymentStatus.Paid;
+                order.Status = OrderStatus.Confirmed;
+                await _unitOfWork.GetRepository<Order>().UpdateAsync(order);
+                await _unitOfWork.SaveChangesAsync(); // Atomic update with stock changes
             }
-            order.PaymentStatus = PaymentStatus.Paid;
-            order.Status = OrderStatus.Confirmed;
-            await _unitOfWork.GetRepository<Order>().UpdateAsync(order);
-            await _unitOfWork.SaveChangesAsync();
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogError(ex, "Stock update failed due to concurrency. OrderId={OrderId}", order.Id);
+                await _unitOfWork.RollBackAsync();
+                return WebhookProcessStatus.OutOfStock;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Database error when reducing stock. OrderId={OrderId}", order.Id);
+                await _unitOfWork.RollBackAsync();
+                return WebhookProcessStatus.Retry;
+            }
+
+            // Clear cart only after payment is confirmed and stock is reduced successfully
+            try
+            {
+                var cart = await _unitOfWork.GetRepository<Cart>()
+                    .FindAsync(c => c.AccountId == order.AccountId);
+
+                if (cart != null)
+                {
+                    var cartItems = await _unitOfWork.GetRepository<CartItem>().FilterByAsync(ci => ci.CartId == cart.Id);
+                    foreach (var item in cartItems)
+                    {
+                        await _unitOfWork.GetRepository<CartItem>().DeleteAsync(item);
+                    }
+                    await _unitOfWork.SaveChangesAsync();
+                    _logger.LogInformation("Cart cleared for order {OrderId}", order.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to clear cart for order {OrderId}. Cart may have duplicate items.", order.Id);
+                // Don't block order confirmation if cart clear fails
+            }
+
+            // Notify chat service about the order status update (fire and forget - don't block if it fails)
+            try
+            {
+                await _chatService.UpdateStatusEventAsync(order.Id.ToString(), order.Status.ToString());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to notify chat service for order {OrderId}. Order still confirmed in database.", order.Id);               
+            }
+
             return WebhookProcessStatus.Success;
         }
 
@@ -335,7 +427,11 @@ namespace ShoppeFake.Infrastructure.Implemention
             }
             catch (PayOSException ex)
             {
-                _logger.LogWarning(ex, "PayOS cancel failed for order code {OrderCode}", orderCode);
+                _logger.LogWarning(ex, "PayOS cancel failed for order code {OrderCode}. Order cancelled locally but PayOS sync may be delayed.", orderCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error cancelling order in PayOS. OrderCode={OrderCode}", orderCode);
             }
 
             order.PaymentStatus = PaymentStatus.Failed;
@@ -377,9 +473,11 @@ namespace ShoppeFake.Infrastructure.Implemention
         private static long GenerateOrderCode()
         {
             var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            var randomPart = Random.Shared.Next(100, 999);
+            var randomPart = Random.Shared.NextInt64(1000, 999999); // Bigger range to prevent collision
 
-            return checked(timestamp * 1000 + randomPart);
+            // Use separate spaces: timestamp * 1M + randomPart
+            // This prevents overlap and collision between orders created at same millisecond
+            return timestamp * 1000000 + randomPart;
         }
 
         private static Webhook ToPayOsWebhook(PayOSWebhookRequest request)
