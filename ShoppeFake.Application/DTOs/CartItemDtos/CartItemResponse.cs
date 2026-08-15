@@ -1,4 +1,6 @@
-﻿namespace ShoppeFake.Application.DTOs.CartItemDtos
+﻿using ShoppeFake.Domain.Enums;
+
+namespace ShoppeFake.Application.DTOs.CartItemDtos
 {
     public class CartItemResponse
     {
@@ -8,6 +10,8 @@
         public string ProductName { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public int Quantity { get; set; }
+        public string? ConversationId { get; set; } = string.Empty;
+        public AddToCartSource Source { get; set; } = AddToCartSource.Product;
 
 
 

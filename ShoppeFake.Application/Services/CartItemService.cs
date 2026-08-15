@@ -62,9 +62,14 @@ namespace ShoppeFake.Application.Services
             var cartItem = new CartItem
             {
                 CartId = cart.Id,
-                ProductVariantId = request.ProductVariantId,
+                ProductVariantId = request.ProductVariantId, 
+                Source = request.Source,
                 Quantity = request.Quantity
             };
+            if(request.ConversationId != null || !string.IsNullOrEmpty(request.ConversationId))
+            {
+                cartItem.ConversationId = request.ConversationId;
+            }
             await _unitOfWork.GetRepository<CartItem>().AddAsync(cartItem);
             await _unitOfWork.SaveChangesAsync();
             var response = _mapper.Map<CartItemResponse>(cartItem);
@@ -128,7 +133,22 @@ namespace ShoppeFake.Application.Services
 
 
         }
-
+        public async Task<Result<string>> DeleteItemCartByItemIdAsync(int itemId)
+        {
+            var user = await _userService.GetUserLoginsAsync();
+            if (user.Value == null)
+            {
+                return Result<string>.Fail("Unauthorized", "User must be logged in to delete cart items.");
+            }
+            var cartItem = await _unitOfWork.GetRepository<CartItem>().FindAsync(x => x.Id == itemId && x.Cart.AccountId == user.Value.Id);
+            if (cartItem == null)
+            {
+                return Result<string>.Fail("NotFound", "Cart item not found.");
+            }
+            await _unitOfWork.GetRepository<CartItem>().DeleteAsync(itemId);
+            await _unitOfWork.SaveChangesAsync();
+            return Result<string>.Success("Cart item deleted successfully.");
+        }
         public async Task<Result<CartItemResponse>> UpdateCartItemAsync(int id, int quantity)
         {
             if (quantity <= 0)

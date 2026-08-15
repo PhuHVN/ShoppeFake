@@ -11,5 +11,6 @@ namespace ShoppeFake.Application.Interfaces
         Task<Result<CartItemResponse>> CreateCartItemAsync(CartItemRequest request);
         Task<Result<CartItemResponse>> UpdateCartItemAsync(int id, int quantity);
         Task<Result> DeleteCartItemAsync(int id);
+        Task<Result<string>> DeleteItemCartByItemIdAsync(int itemId);
     }
 }

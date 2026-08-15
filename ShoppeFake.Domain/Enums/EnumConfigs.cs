@@ -42,4 +42,9 @@
         OutOfStock,
         AmountMismatch
     }
+    public enum AddToCartSource
+    {
+        Product = 1,
+        Chat = 2
+    }
 }

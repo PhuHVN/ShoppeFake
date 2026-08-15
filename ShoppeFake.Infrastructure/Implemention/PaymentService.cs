@@ -46,7 +46,7 @@ namespace ShoppeFake.Infrastructure.Implemention
             {
                 return Result<PaymentLinkResponse>.Fail("INVALID_CHECKOUT", "Receiver information is required.");
             }
-
+            
             var userResult = await _userService.GetUserLoginsAsync();
             if (userResult.Value == null)
             {
@@ -128,32 +128,50 @@ namespace ShoppeFake.Infrastructure.Implemention
                 order.PaymentUrl = paymentLink.CheckoutUrl;
                 await _unitOfWork.GetRepository<Order>().AddAsync(order);
                 await _unitOfWork.SaveChangesAsync();
-                
-                // Callback to chat service if conversationId is provided (fire and forget - don't block if it fails)
-                if (!string.IsNullOrWhiteSpace(request.ConversationId))
+                //=======================================
+                //get cart items that are from chat source and have conversationId
+                var cartItems = await _unitOfWork.GetRepository<CartItem>()
+                    .FilterByAsync(ci => ci.CartId == cart.Id && ci.Source == AddToCartSource.Chat && !string.IsNullOrEmpty(ci.ConversationId));
+                var conversationGroups = cartItems.GroupBy(x => x.ConversationId);
+                // Callback to chat service if conversationId is provided
+                foreach (var conversationGroup in conversationGroups)
                 {
                     try
                     {
+                        var conversationId = conversationGroup.Key;
+
+                        var productVariantIds = conversationGroup
+                            .Select(x => x.ProductVariantId)
+                            .ToHashSet();
+
+                        var orderItems = order.OrderItems
+                            .Where(x => productVariantIds.Contains(x.ProductVariantId))
+                            .ToList();
+
+                        if (!orderItems.Any())
+                            continue;
+
                         var orderEvents = new OrdersRequest
                         {
                             ExternalOrderId = order.Id,
-                            Amount = order.OrderItems.Sum(x => x.UnitPrice * x.Quantity),
+                            Amount = orderItems.Sum(x => x.UnitPrice * x.Quantity),
                             Status = order.Status.ToString(),
-                            Products = order.OrderItems.Select(item => new OrderProductItemRequest
+                            Products = orderItems.Select(item => new OrderProductItemRequest
                             {
                                 ExternalProductId = item.ProductVariantId.ToString(),
-                                ProductName = item.ProductVariant.VariantName,
+                                ProductName = item.ProductVariant?.VariantName ?? string.Empty,
                                 Quantity = item.Quantity,
                                 Price = item.UnitPrice
                             }).ToList()
                         };
-                        // Callback OrderEvent to ChatApi
-                        await _chatService.OrderEventAsync(request.ConversationId, orderEvents);
+
+                        await _chatService.OrderEventAsync(conversationId!, orderEvents);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Failed to send order event to chat service for order {OrderId}. Order created successfully but chat notification failed.", order.Id);
-                        // Don't throw - payment link is already created, chat notification is non-critical
+                        _logger.LogWarning(ex,
+                            "Failed to send order event to chat service for conversation {ConversationId}",
+                            conversationGroup.Key);
                     }
                 }
 
