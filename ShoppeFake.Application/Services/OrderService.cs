@@ -46,6 +46,7 @@ namespace ShoppeFake.Application.Services
                 .Where(o => o.AccountId == user.Value.Id)
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.ProductVariant)
+                .ThenInclude(cr => cr.CartItems)
                 .OrderByDescending(o => o.CreatedAt);
 
             var orders = await _unitOfWork.GetRepository<Order>().GetPagging(query, pageNumber, pageSize);
