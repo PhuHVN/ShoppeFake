@@ -390,7 +390,7 @@ namespace ShoppeFake.Infrastructure.Implemention
                     var cartItems = await _unitOfWork.GetRepository<CartItem>().FilterByAsync(ci => ci.CartId == cart.Id);
                     foreach (var item in cartItems)
                     {
-                        await _unitOfWork.GetRepository<CartItem>().DeleteAsync(item);
+                        await _unitOfWork.GetRepository<CartItem>().DeleteAsync(item.Id);
                     }
                     await _unitOfWork.SaveChangesAsync();
                     _logger.LogInformation("Cart cleared for order {OrderId}", order.Id);

@@ -12,7 +12,7 @@ namespace ShoppeFake.Application.DTOs.ChatApiDtos
 
         public Web1ChatData? Data { get; set; }
 
-        public Dictionary<string, string>? errors { get; set; }
+        public Dictionary<string, string[]>? Errors { get; set; }
     }
     public sealed class Web1ChatData
     {
