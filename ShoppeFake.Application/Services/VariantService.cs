@@ -248,11 +248,11 @@ namespace ShoppeFake.Application.Services
             {
                 return Result<VariantResponse>.Fail("NotFound", "Variant not found.");
             }
-            request.VariantName = string.IsNullOrEmpty(request.VariantName) ? variant.VariantName : request.VariantName;
-            request.Price = request.Price <= 0 ? variant.Price : request.Price;
-            request.StockQuantity = request.StockQuantity < 0 ? variant.StockQuantity : request.StockQuantity;
-            request.Sku = string.IsNullOrEmpty(request.Sku) ? variant.Sku : request.Sku;
-            request.WeightGrams = request.WeightGrams <= 0 ? variant.WeightGrams : request.WeightGrams;
+            variant.VariantName = string.IsNullOrEmpty(request.VariantName) ? variant.VariantName : request.VariantName;
+            variant.Price = request.Price <= 0 ? variant.Price : request.Price;
+            variant.StockQuantity = request.StockQuantity < 0 ? variant.StockQuantity : request.StockQuantity;
+            variant.Sku = string.IsNullOrEmpty(request.Sku) ? variant.Sku : request.Sku;
+            variant.WeightGrams = request.WeightGrams <= 0 ? variant.WeightGrams : request.WeightGrams;
             await _unitOfWork.GetRepository<ProductVariant>().UpdateAsync(variant);
             await _unitOfWork.SaveChangesAsync();
             return Result<VariantResponse>.Success(_mapper.Map<VariantResponse>(variant));
