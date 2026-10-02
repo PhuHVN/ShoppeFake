@@ -87,5 +87,59 @@ namespace ShoppeFake.Application.Services
                 return Result.Fail(new Error("500", $"Failed to delete images: {ex.Message}"));
             }
         }
+
+        public async Task<Result> UpdateProductImageAsync(int variantId, ImageDtos imageDtos)
+        {
+            if (imageDtos == null || imageDtos.Image == null)
+            {
+                return Result.Fail(new Error("400", "Image file is required."));
+            }
+
+            var variant = await _unitOfWork.GetRepository<ProductVariant>().GetByIdAsync(variantId);
+            if (variant == null)
+            {
+                return Result.Fail(new Error("404", "Variant not found."));
+            }
+
+            try
+            {
+                var uploadResult = await _cloudinaryService.UploadImageAsync(imageDtos.Image);
+                if (string.IsNullOrEmpty(uploadResult))
+                {
+                    return Result.Fail(new Error("500", "Image upload failed."));
+                }
+
+                await DeleteExistingVariantImagesAsync(variantId);
+                await AddProductImageAsync(variant.ProductId, variantId, uploadResult);
+                await _unitOfWork.SaveChangesAsync();
+
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(new Error("500", $"Image update failed: {ex.Message}"));
+            }
+        }
+
+        private async Task DeleteExistingVariantImagesAsync(int variantId)
+        {
+            var existingImages = await _unitOfWork.GetRepository<ProductImage>().FilterByAsync(x => x.VariantId == variantId);
+            if (existingImages != null && existingImages.Count > 0)
+            {
+                await _unitOfWork.GetRepository<ProductImage>().DeleteRangeAsync(existingImages);
+            }
+        }
+
+        private async Task AddProductImageAsync(int productId, int variantId, string imageUrl)
+        {
+            var productImage = new ProductImage
+            {
+                ProductId = productId,
+                VariantId = variantId,
+                ImageUrl = imageUrl
+            };
+
+            await _unitOfWork.GetRepository<ProductImage>().AddAsync(productImage);
+        }
     }
 }

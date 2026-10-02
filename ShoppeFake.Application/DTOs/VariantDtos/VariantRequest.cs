@@ -13,7 +13,6 @@ namespace ShoppeFake.Application.DTOs.VariantDtos
     }
     public class VariantUpdateRequest
     {
-        public IFormFile? NewImage { get; set; }
         public string VariantName { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
