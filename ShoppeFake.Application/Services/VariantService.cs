@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using ShoppeFake.Application.DTOs.ExcelDtos;
+using ShoppeFake.Application.DTOs.ImgDtos;
 using ShoppeFake.Application.DTOs.VariantDtos;
 using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Abstractions;
@@ -14,11 +15,13 @@ namespace ShoppeFake.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+       private readonly IProductImageService _productImageService;
 
-        public VariantService(IUnitOfWork unitOfWork, IMapper mapper)
+        public VariantService(IUnitOfWork unitOfWork, IMapper mapper, IProductImageService productImageService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _productImageService = productImageService;
         }
 
         public async Task<Result<VariantResponse>> CreateVariantAsync(IList<int> valueIds, VariantRequest request)
@@ -248,11 +251,32 @@ namespace ShoppeFake.Application.Services
             {
                 return Result<VariantResponse>.Fail("NotFound", "Variant not found.");
             }
+            if(request.NewImage != null)
+            {
+                // Delete old images for this variant before uploading new one
+                var deleteResult = await _productImageService.DeleteProductImagesByVariantAsync(variant.Id);
+                if (!deleteResult.IsSuccess)
+                {
+                    return Result<VariantResponse>.Fail(deleteResult.Error.Code, deleteResult.Error.Message);
+                }
+                // Upload new image
+                var imageResult = await _productImageService.UploadProductImageAsync(new ImageDtos
+                {
+                    ProductId = variant.ProductId,
+                    VariantId = variant.Id,
+                    Image = request.NewImage
+                });
+                if (!imageResult.IsSuccess)
+                {
+                    return Result<VariantResponse>.Fail(imageResult.Error.Code, imageResult.Error.Message);
+                }
+            }
             variant.VariantName = string.IsNullOrEmpty(request.VariantName) ? variant.VariantName : request.VariantName;
             variant.Price = request.Price <= 0 ? variant.Price : request.Price;
             variant.StockQuantity = request.StockQuantity < 0 ? variant.StockQuantity : request.StockQuantity;
             variant.Sku = string.IsNullOrEmpty(request.Sku) ? variant.Sku : request.Sku;
             variant.WeightGrams = request.WeightGrams <= 0 ? variant.WeightGrams : request.WeightGrams;
+            variant.UpdatedAt = DateTime.UtcNow;
             await _unitOfWork.GetRepository<ProductVariant>().UpdateAsync(variant);
             await _unitOfWork.SaveChangesAsync();
             return Result<VariantResponse>.Success(_mapper.Map<VariantResponse>(variant));

@@ -8,5 +8,6 @@ namespace ShoppeFake.Application.Interfaces
     {
         Task<Result<string>> UploadProductImageAsync(ImageDtos imageDtos);
         Task<Result<BasePaginatedList<ImageResponse>>> ListProductImagesAsync(int pageIndex, int pageSize);
+        Task<Result> DeleteProductImagesByVariantAsync(int variantId);
     }
 }

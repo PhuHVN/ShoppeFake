@@ -61,14 +61,31 @@ namespace ShoppeFake.Application.Services
                 };
                 await _unitOfWork.GetRepository<ProductImage>().AddAsync(productImage);
                 await _unitOfWork.SaveChangesAsync();
-                return Result<string>.Success("Image uploaded successfully.");
+                return Result<string>.Success(uploadResult);
             }
             catch (Exception ex)
             {
                 return Result<string>.Fail("500", $"Image upload failed: {ex.Message}");
             }
+        }
 
-
+        public async Task<Result> DeleteProductImagesByVariantAsync(int variantId)
+        {
+            try
+            {
+                var images = await _unitOfWork.GetRepository<ProductImage>().FilterByAsync(x => x.VariantId == variantId);
+                if (images == null || images.Count == 0)
+                {
+                    return Result.Success();
+                }
+                await _unitOfWork.GetRepository<ProductImage>().DeleteRangeAsync(images);
+                await _unitOfWork.SaveChangesAsync();
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(new Error("500", $"Failed to delete images: {ex.Message}"));
+            }
         }
     }
 }
