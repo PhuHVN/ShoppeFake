@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using ShoppeFake.Domain.Entities;
 
 namespace ShoppeFake.Application.DTOs.VariantDtos
 {
@@ -18,5 +19,6 @@ namespace ShoppeFake.Application.DTOs.VariantDtos
         public int StockQuantity { get; set; }
         public string Sku { get; set; } = string.Empty;
         public int WeightGrams { get; set; }
+        public List<int> VariantAttributeValuesIds { get; set; } = new ();
     }
 }

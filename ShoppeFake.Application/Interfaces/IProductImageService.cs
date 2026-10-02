@@ -1,4 +1,5 @@
-﻿using ShoppeFake.Application.DTOs.ImgDtos;
+﻿using Microsoft.AspNetCore.Http;
+using ShoppeFake.Application.DTOs.ImgDtos;
 using ShoppeFake.Domain.Abstractions;
 using ShoppeFake.Domain.Common.Results;
 
@@ -9,6 +10,6 @@ namespace ShoppeFake.Application.Interfaces
         Task<Result<string>> UploadProductImageAsync(ImageDtos imageDtos);
         Task<Result<BasePaginatedList<ImageResponse>>> ListProductImagesAsync(int pageIndex, int pageSize);
         Task<Result> DeleteProductImagesByVariantAsync(int variantId);
-        Task<Result> UpdateProductImageAsync(int variantId, ImageDtos imageDtos);
+        Task<Result> UpdateProductImageAsync(int variant , IFormFile file);
     }
 }

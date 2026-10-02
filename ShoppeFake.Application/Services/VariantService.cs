@@ -15,7 +15,7 @@ namespace ShoppeFake.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-       private readonly IProductImageService _productImageService;
+        private readonly IProductImageService _productImageService;
 
         public VariantService(IUnitOfWork unitOfWork, IMapper mapper, IProductImageService productImageService)
         {
@@ -118,7 +118,7 @@ namespace ShoppeFake.Application.Services
                 .Include(x => x.VariantAttributeValues)
                     .ThenInclude(x => x.Attribute)
                 .Include(x => x.VariantAttributeValues)
-                    .ThenInclude(x => x.AttributeValue); 
+                    .ThenInclude(x => x.AttributeValue);
 
             switch (orderBy?.ToLower())
             {
@@ -246,20 +246,114 @@ namespace ShoppeFake.Application.Services
 
         public async Task<Result<VariantResponse>> UpdateVariantAsync(int id, VariantUpdateRequest request)
         {
-            var variant = await _unitOfWork.GetRepository<ProductVariant>().FindAsync(x => x.Id == id && x.Status == Domain.Enums.StatusEnum.Active);
-            if (variant == null)
+            try
             {
-                return Result<VariantResponse>.Fail("NotFound", "Variant not found.");
+                var variant = await _unitOfWork.GetRepository<ProductVariant>().FindAsync(x => x.Id == id && x.Status == Domain.Enums.StatusEnum.Active);
+                if (variant == null)
+                {
+                    return Result<VariantResponse>.Fail("NotFound", "Variant not found.");
+                }
+               
+                var isUpdate = false;
+                if (!string.IsNullOrEmpty(request.VariantName) && variant.VariantName != request.VariantName)
+                {
+                    variant.VariantName = request.VariantName;
+                    isUpdate = true;
+                }
+                if (request.Price > 0 && variant.Price != request.Price)
+                {
+                    variant.Price = request.Price;
+                    isUpdate = true;
+                }
+                if (request.StockQuantity >= 0 && variant.StockQuantity != request.StockQuantity)
+                {
+                    variant.StockQuantity = request.StockQuantity;
+                    isUpdate = true;
+                }
+                if (!string.IsNullOrEmpty(request.Sku) && variant.Sku != request.Sku)
+                {
+                    variant.Sku = request.Sku;
+                    isUpdate = true;
+                }
+                if (request.WeightGrams > 0 && variant.WeightGrams != request.WeightGrams)
+                {
+                    variant.WeightGrams = request.WeightGrams;
+                    isUpdate = true;
+                }
+
+                // Handle VariantAttributeValues update - replace old with new
+                if (request.VariantAttributeValuesIds != null && request.VariantAttributeValuesIds.Count > 0)
+                {
+                    // Validate: Get AttributeValues and check for duplicate AttributeIds
+                    var attributeValues = new List<AttributeValue>();
+                    var attributeIdMap = new Dictionary<int, int>(); // attributeId -> valueId
+
+                    foreach (var valueId in request.VariantAttributeValuesIds)
+                    {
+                        var value = await _unitOfWork.GetRepository<AttributeValue>().FindAsync(x => x.Id == valueId);
+                        if (value != null)
+                        {
+                            // Check if this AttributeId already exists in the map
+                            if (attributeIdMap.ContainsKey(value.AttributeId))
+                            {
+                                return Result<VariantResponse>.Fail("DuplicateAttribute", 
+                                    $"Multiple values provided for the same attribute (AttributeId: {value.AttributeId}). Each attribute can only have one value.");
+                            }
+                            attributeIdMap[value.AttributeId] = valueId;
+                            attributeValues.Add(value);
+                        }
+                        else
+                        {
+                            return Result<VariantResponse>.Fail("AttributeValueNotFound", 
+                                $"Attribute value with ID {valueId} not found.");
+                        }
+                    }
+
+                    // Get all existing attribute values for this variant
+                    var existingAttributeValues = await _unitOfWork.GetRepository<VariantAttributeValue>()
+                        .Entity
+                        .Where(x => x.ProductVariantId == id)
+                        .ToListAsync();
+
+                    // Delete all existing attribute values for this variant
+                    if (existingAttributeValues.Count > 0)
+                    {
+                        await _unitOfWork.GetRepository<VariantAttributeValue>().DeleteRangeAsync(existingAttributeValues);
+                        await _unitOfWork.SaveChangesAsync();
+                        isUpdate = true;
+                    }
+
+                    // Add new attribute values
+                    var newVariantAttributeValues = new List<VariantAttributeValue>();
+                    foreach (var value in attributeValues)
+                    {
+                        newVariantAttributeValues.Add(new VariantAttributeValue
+                        {
+                            ProductVariantId = id,
+                            AttributeId = value.AttributeId,
+                            AttributeValueId = value.Id
+                        });
+                    }
+
+                    if (newVariantAttributeValues.Count > 0)
+                    {
+                        await _unitOfWork.GetRepository<VariantAttributeValue>().AddRangeAsync(newVariantAttributeValues);
+                        isUpdate = true;
+                    }
+                }
+                if (!isUpdate)
+                {
+                    return Result<VariantResponse>.Fail("NoChanges", "No changes to update.");
+                }
+                variant.UpdatedAt = DateTime.UtcNow;
+                await _unitOfWork.GetRepository<ProductVariant>().UpdateAsync(variant);
+                await _unitOfWork.SaveChangesAsync();
+                return Result<VariantResponse>.Success(_mapper.Map<VariantResponse>(variant));
             }
-            variant.VariantName = string.IsNullOrEmpty(request.VariantName) ? variant.VariantName : request.VariantName;
-            variant.Price = request.Price <= 0 ? variant.Price : request.Price;
-            variant.StockQuantity = request.StockQuantity < 0 ? variant.StockQuantity : request.StockQuantity;
-            variant.Sku = string.IsNullOrEmpty(request.Sku) ? variant.Sku : request.Sku;
-            variant.WeightGrams = request.WeightGrams <= 0 ? variant.WeightGrams : request.WeightGrams;
-            variant.UpdatedAt = DateTime.UtcNow;
-            await _unitOfWork.GetRepository<ProductVariant>().UpdateAsync(variant);
-            await _unitOfWork.SaveChangesAsync();
-            return Result<VariantResponse>.Success(_mapper.Map<VariantResponse>(variant));
+            catch (Exception ex)
+            {
+                return Result<VariantResponse>.Fail("Error", $"An error occurred while updating the variant: {ex.Message}");
+            }
         }
     }
 }
