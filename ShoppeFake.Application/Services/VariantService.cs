@@ -251,26 +251,6 @@ namespace ShoppeFake.Application.Services
             {
                 return Result<VariantResponse>.Fail("NotFound", "Variant not found.");
             }
-            if(request.NewImage != null)
-            {
-                // Delete old images for this variant before uploading new one
-                var deleteResult = await _productImageService.DeleteProductImagesByVariantAsync(variant.Id);
-                if (!deleteResult.IsSuccess)
-                {
-                    return Result<VariantResponse>.Fail(deleteResult.Error.Code, deleteResult.Error.Message);
-                }
-                // Upload new image
-                var imageResult = await _productImageService.UploadProductImageAsync(new ImageDtos
-                {
-                    ProductId = variant.ProductId,
-                    VariantId = variant.Id,
-                    Image = request.NewImage
-                });
-                if (!imageResult.IsSuccess)
-                {
-                    return Result<VariantResponse>.Fail(imageResult.Error.Code, imageResult.Error.Message);
-                }
-            }
             variant.VariantName = string.IsNullOrEmpty(request.VariantName) ? variant.VariantName : request.VariantName;
             variant.Price = request.Price <= 0 ? variant.Price : request.Price;
             variant.StockQuantity = request.StockQuantity < 0 ? variant.StockQuantity : request.StockQuantity;
