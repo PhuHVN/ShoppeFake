@@ -45,9 +45,9 @@ namespace ShoppeFake.API.Controllers
         [HttpPut("variant/{variantId}")]
         [Authorize(Roles = "Admin")]
         [SwaggerOperation(summary: "Admin - Update product image by variant", description: "Updates the image for a specific product variant.")]
-        public async Task<IActionResult> UpdateProductImage(int variantId, [FromForm] ImageDtos imageDtos)
+        public async Task<IActionResult> UpdateProductImage(int variantId,  IFormFile file)
         {
-            var result = await _productImageService.UpdateProductImageAsync(variantId, imageDtos);
+            var result = await _productImageService.UpdateProductImageAsync(variantId, file);
             if (result.IsFailure)
             {
                 return BadRequest(ApiResponse<string>.BadRequestResponse(result.Error.Message));

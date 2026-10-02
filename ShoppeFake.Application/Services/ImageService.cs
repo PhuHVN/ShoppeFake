@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using ShoppeFake.Application.DTOs.ImgDtos;
 using ShoppeFake.Application.Interfaces;
 using ShoppeFake.Domain.Abstractions;
@@ -88,14 +89,14 @@ namespace ShoppeFake.Application.Services
             }
         }
 
-        public async Task<Result> UpdateProductImageAsync(int variantId, ImageDtos imageDtos)
+        public async Task<Result> UpdateProductImageAsync(int variantId, IFormFile file)
         {
-            if (imageDtos == null || imageDtos.Image == null)
+            if (file == null)
             {
                 return Result.Fail(new Error("400", "Image file is required."));
             }
 
-            var variant = await _unitOfWork.GetRepository<ProductVariant>().GetByIdAsync(variantId);
+            var variant = await _unitOfWork.GetRepository<ProductVariant>().FindAsync(x => x.Id == variantId);
             if (variant == null)
             {
                 return Result.Fail(new Error("404", "Variant not found."));
@@ -103,14 +104,14 @@ namespace ShoppeFake.Application.Services
 
             try
             {
-                var uploadResult = await _cloudinaryService.UploadImageAsync(imageDtos.Image);
+                var uploadResult = await _cloudinaryService.UploadImageAsync(file);
                 if (string.IsNullOrEmpty(uploadResult))
                 {
                     return Result.Fail(new Error("500", "Image upload failed."));
                 }
 
-                await DeleteExistingVariantImagesAsync(variantId);
-                await AddProductImageAsync(variant.ProductId, variantId, uploadResult);
+                await DeleteExistingVariantImagesAsync(variant.Id);
+                await AddProductImageAsync(variant.ProductId, variant.Id, uploadResult);
                 await _unitOfWork.SaveChangesAsync();
 
                 return Result.Success();

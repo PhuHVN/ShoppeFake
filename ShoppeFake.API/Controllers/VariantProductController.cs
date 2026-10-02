@@ -81,14 +81,14 @@ namespace ShoppeFake.API.Controllers
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         [SwaggerOperation(summary: "Admin - Update a product variant", description: "Updates the details of an existing product variant.")]
-        public async Task<IActionResult> Update(int id, [FromBody] VariantUpdateRequest request)
+        public async Task<IActionResult> Update(int id, [FromForm] VariantUpdateRequest request)
         {
             var result = await _variantProductService.UpdateVariantAsync(id, request);
             if (result.IsSuccess)
             {
                 return Ok(ApiResponse<VariantResponse>.OkResponse(result.Value, "Variant updated successfully", "200"));
             }
-            return BadRequest(ApiResponse<string>.BadRequestResponse("Failed to update variant"));
+            return BadRequest(ApiResponse<string>.BadRequestResponse(result.Error.Message));
         }
     }
 
